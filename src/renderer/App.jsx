@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { logger } from './logger';
-import { ToastProvider, useToast, GlobalSearch, Modal, ErrorBoundary } from './components';
+import { ToastProvider, useToast, GlobalSearch, Modal, ErrorBoundary, useTranslation, LanguageSwitcher, LocaleProvider } from './components';
 import { useContactStore, useCompanyStore, useDealStore, useTaskStore } from '../shared/store';
 
 function AppContent() {
+  const { t } = useTranslation();
   const [appInfo, setAppInfo] = useState(null);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -41,7 +42,7 @@ function AppContent() {
   if (error) {
     return (
       <div className="app-error">
-        <h1>Error</h1>
+        <h1>{t('app.error')}</h1>
         <p>{error}</p>
       </div>
     );
@@ -51,7 +52,7 @@ function AppContent() {
     return (
       <div className="app-loading">
         <div className="spinner"></div>
-        <p>Loading Solo CRM...</p>
+        <p>{t('app.loading')}</p>
       </div>
     );
   }
@@ -67,7 +68,7 @@ function AppContent() {
 
   return (
     <div className="app">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} stats={stats} appInfo={appInfo} />
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} stats={stats} appInfo={appInfo} t={t} />
 
       <main className="app-main">
         <div className="module-header" style={{ marginBottom: '1rem' }}>
@@ -80,23 +81,24 @@ function AppContent() {
             pipelineSummary={pipelineSummary}
             upcomingTasks={upcomingTasks}
             totalPipelineValue={totalPipelineValue}
+            t={t}
           />
         )}
 
         {activeTab === 'contacts' && (
-          <ContactsView contacts={contacts} onLoad={loadContacts} toast={toast} />
+          <ContactsView contacts={contacts} onLoad={loadContacts} toast={toast} t={t} />
         )}
 
         {activeTab === 'companies' && (
-          <CompaniesView companies={companies} onLoad={loadCompanies} toast={toast} />
+          <CompaniesView companies={companies} onLoad={loadCompanies} toast={toast} t={t} />
         )}
 
         {activeTab === 'deals' && (
-          <DealsView deals={deals} onLoad={loadDeals} toast={toast} />
+          <DealsView deals={deals} onLoad={loadDeals} toast={toast} t={t} />
         )}
 
         {activeTab === 'tasks' && (
-          <TasksView tasks={tasks} onLoad={loadTasks} toast={toast} />
+          <TasksView tasks={tasks} onLoad={loadTasks} toast={toast} t={t} />
         )}
       </main>
     </div>
@@ -106,20 +108,22 @@ function AppContent() {
 function App() {
   return (
     <ErrorBoundary>
-      <ToastProvider>
-        <AppContent />
-      </ToastProvider>
+      <LocaleProvider>
+        <ToastProvider>
+          <AppContent />
+        </ToastProvider>
+      </LocaleProvider>
     </ErrorBoundary>
   );
 }
 
-function Sidebar({ activeTab, setActiveTab, stats, appInfo }) {
+function Sidebar({ activeTab, setActiveTab, stats, appInfo, t }) {
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'contacts', label: 'Contacts', icon: '👥' },
-    { id: 'companies', label: 'Companies', icon: '🏢' },
-    { id: 'deals', label: 'Deals', icon: '💰' },
-    { id: 'tasks', label: 'Tasks', icon: '✅' },
+    { id: 'dashboard', label: t('nav.dashboard'), icon: '📊' },
+    { id: 'contacts', label: t('nav.contacts'), icon: '👥' },
+    { id: 'companies', label: t('nav.companies'), icon: '🏢' },
+    { id: 'deals', label: t('nav.deals'), icon: '💰' },
+    { id: 'tasks', label: t('nav.tasks'), icon: '✅' },
   ];
 
   return (
@@ -146,46 +150,49 @@ function Sidebar({ activeTab, setActiveTab, stats, appInfo }) {
         ))}
       </nav>
       <div className="sidebar-footer">
-        <span className="version">v{appInfo?.version || '0.1.0'}</span>
+        <div className="footer-content">
+          <LanguageSwitcher />
+          <span className="version">v{appInfo?.version || '0.1.0'}</span>
+        </div>
       </div>
     </aside>
   );
 }
 
-function Dashboard({ stats, pipelineSummary, upcomingTasks, totalPipelineValue }) {
+function Dashboard({ stats, pipelineSummary, upcomingTasks, totalPipelineValue, t }) {
   return (
     <div className="dashboard">
-      <h2>Dashboard</h2>
+      <h2>{t('dashboard.title')}</h2>
 
       <div className="stats-grid">
-        <StatCard title="Contacts" value={stats.totalContacts} icon="👥" color="#3b82f6" />
-        <StatCard title="Companies" value={stats.totalCompanies} icon="🏢" color="#22c55e" />
-        <StatCard title="Pipeline Value" value={`$${totalPipelineValue.toLocaleString()}`} icon="💰" color="#f59e0b" />
-        <StatCard title="Pending Tasks" value={stats.totalTasks} icon="✅" color="#8b5cf6" />
+        <StatCard title={t('dashboard.totalContacts')} value={stats.totalContacts} icon="👥" color="#3b82f6" />
+        <StatCard title={t('dashboard.totalCompanies')} value={stats.totalCompanies} icon="🏢" color="#22c55e" />
+        <StatCard title={t('dashboard.pipelineValue')} value={`¥${totalPipelineValue.toLocaleString()}`} icon="💰" color="#f59e0b" />
+        <StatCard title={t('dashboard.pendingTasks')} value={stats.totalTasks} icon="✅" color="#8b5cf6" />
       </div>
 
       <div className="dashboard-grid">
         <div className="dashboard-card">
-          <h3>Pipeline by Stage</h3>
+          <h3>{t('dashboard.pipelineByStage')}</h3>
           {pipelineSummary.length > 0 ? (
             <div className="pipeline-summary">
               {pipelineSummary.map((stage) => (
                 <div key={stage.stage} className="pipeline-stage">
-                  <div className="pipeline-stage-name">{stage.stage.replace('_', ' ')}</div>
+                  <div className="pipeline-stage-name">{translateStage(stage.stage, t)}</div>
                   <div className="pipeline-stage-info">
-                    <span className="count">{stage.count} deals</span>
-                    <span className="value">${stage.total_value?.toLocaleString()}</span>
+                    <span className="count">{stage.count} {t('dashboard.deals')}</span>
+                    <span className="value">¥{stage.total_value?.toLocaleString()}</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <EmptyState message="No deals in pipeline" />
+            <EmptyState message={t('dashboard.noDeals')} />
           )}
         </div>
 
         <div className="dashboard-card">
-          <h3>Upcoming Tasks (7 days)</h3>
+          <h3>{t('dashboard.upcomingTasks')}</h3>
           {upcomingTasks.length > 0 ? (
             <div className="upcoming-tasks">
               {upcomingTasks.slice(0, 5).map((task) => (
@@ -197,7 +204,7 @@ function Dashboard({ stats, pipelineSummary, upcomingTasks, totalPipelineValue }
               ))}
             </div>
           ) : (
-            <EmptyState message="No upcoming tasks" />
+            <EmptyState message={t('dashboard.noUpcomingTasks')} />
           )}
         </div>
       </div>
@@ -217,7 +224,20 @@ function StatCard({ title, value, icon, color }) {
   );
 }
 
-function ContactsView({ contacts, onLoad, toast }) {
+function translateStage(stage, t) {
+  const stageMap = {
+    'lead': 'deals.stages.lead',
+    'qualified': 'deals.stages.qualified',
+    'proposal': 'deals.stages.proposal',
+    'negotiation': 'deals.stages.negotiation',
+    'closed_won': 'deals.stages.closed_won',
+    'closed_lost': 'deals.stages.closed_lost',
+  };
+  const key = stageMap[stage];
+  return key ? t(key) : stage.replace('_', ' ');
+}
+
+function ContactsView({ contacts, onLoad, toast, t }) {
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', notes: '' });
 
@@ -225,45 +245,45 @@ function ContactsView({ contacts, onLoad, toast }) {
     e.preventDefault();
     try {
       await window.electronAPI.db.createContact(formData);
-      toast.success('Contact created successfully');
+      toast.success(t('contacts.createdSuccess'));
       setFormData({ name: '', email: '', phone: '', notes: '' });
       setShowModal(false);
       onLoad();
     } catch (error) {
-      toast.error(`Failed to create contact: ${error.message}`);
+      toast.error(`${t('contacts.createFailed')}: ${error.message}`);
     }
   };
 
   return (
     <div className="module-view">
       <div className="module-header">
-        <h2>Contacts</h2>
+        <h2>{t('contacts.title')}</h2>
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-          + Add Contact
+          {t('contacts.addContact')}
         </button>
       </div>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Add Contact">
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={t('contacts.addContact')}>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Name *</label>
+            <label>{t('contacts.name')} *</label>
             <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
           </div>
           <div className="form-group">
-            <label>Email</label>
+            <label>{t('contacts.email')}</label>
             <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>Phone</label>
+            <label>{t('contacts.phone')}</label>
             <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>Notes</label>
+            <label>{t('contacts.notes')}</label>
             <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
-            <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Save Contact</button>
+            <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>{t('contacts.cancel')}</button>
+            <button type="submit" className="btn btn-primary">{t('contacts.saveContact')}</button>
           </div>
         </form>
       </Modal>
@@ -272,7 +292,7 @@ function ContactsView({ contacts, onLoad, toast }) {
         {contacts.length > 0 ? (
           <table className="data-table">
             <thead>
-              <tr><th>Name</th><th>Email</th><th>Phone</th><th>Notes</th></tr>
+              <tr><th>{t('contacts.name')}</th><th>{t('contacts.email')}</th><th>{t('contacts.phone')}</th><th>{t('contacts.notes')}</th></tr>
             </thead>
             <tbody>
               {contacts.map((contact) => (
@@ -286,14 +306,14 @@ function ContactsView({ contacts, onLoad, toast }) {
             </tbody>
           </table>
         ) : (
-          <EmptyState message="No contacts yet. Add your first contact!" />
+          <EmptyState message={t('contacts.noContacts')} />
         )}
       </div>
     </div>
   );
 }
 
-function CompaniesView({ companies, onLoad, toast }) {
+function CompaniesView({ companies, onLoad, toast, t }) {
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ name: '', website: '', industry: '', phone: '', notes: '' });
 
@@ -301,47 +321,47 @@ function CompaniesView({ companies, onLoad, toast }) {
     e.preventDefault();
     try {
       await window.electronAPI.db.createCompany(formData);
-      toast.success('Company created successfully');
+      toast.success(t('companies.createdSuccess'));
       setFormData({ name: '', website: '', industry: '', phone: '', notes: '' });
       setShowModal(false);
       onLoad();
     } catch (error) {
-      toast.error(`Failed to create company: ${error.message}`);
+      toast.error(`${t('companies.createFailed')}: ${error.message}`);
     }
   };
 
   return (
     <div className="module-view">
       <div className="module-header">
-        <h2>Companies</h2>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add Company</button>
+        <h2>{t('companies.title')}</h2>
+        <button className="btn btn-primary" onClick={() => setShowModal(true)}>{t('companies.addCompany')}</button>
       </div>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Add Company">
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={t('companies.addCompany')}>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Name *</label>
+            <label>{t('companies.name')} *</label>
             <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
           </div>
           <div className="form-group">
-            <label>Website</label>
+            <label>{t('companies.website')}</label>
             <input type="url" value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>Industry</label>
+            <label>{t('companies.industry')}</label>
             <input type="text" value={formData.industry} onChange={(e) => setFormData({ ...formData, industry: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>Phone</label>
+            <label>{t('companies.phone')}</label>
             <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>Notes</label>
+            <label>{t('companies.notes')}</label>
             <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
-            <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Save Company</button>
+            <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>{t('companies.cancel')}</button>
+            <button type="submit" className="btn btn-primary">{t('companies.saveCompany')}</button>
           </div>
         </form>
       </Modal>
@@ -350,7 +370,7 @@ function CompaniesView({ companies, onLoad, toast }) {
         {companies.length > 0 ? (
           <table className="data-table">
             <thead>
-              <tr><th>Name</th><th>Website</th><th>Industry</th><th>Phone</th><th>Contacts</th></tr>
+              <tr><th>{t('companies.name')}</th><th>{t('companies.website')}</th><th>{t('companies.industry')}</th><th>{t('companies.phone')}</th><th>{t('companies.contacts')}</th></tr>
             </thead>
             <tbody>
               {companies.map((company) => (
@@ -365,14 +385,14 @@ function CompaniesView({ companies, onLoad, toast }) {
             </tbody>
           </table>
         ) : (
-          <EmptyState message="No companies yet. Add your first company!" />
+          <EmptyState message={t('companies.noCompanies')} />
         )}
       </div>
     </div>
   );
 }
 
-function DealsView({ deals, onLoad, toast }) {
+function DealsView({ deals, onLoad, toast, t }) {
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     title: '', stage: 'lead', value: '', probability: 0, close_date: '', notes: '',
@@ -390,12 +410,12 @@ function DealsView({ deals, onLoad, toast }) {
         contact_id: null,
         company_id: null,
       });
-      toast.success('Deal created successfully');
+      toast.success(t('deals.createdSuccess'));
       setFormData({ title: '', stage: 'lead', value: '', probability: 0, close_date: '', notes: '' });
       setShowModal(false);
       onLoad();
     } catch (error) {
-      toast.error(`Failed to create deal: ${error.message}`);
+      toast.error(`${t('deals.createFailed')}: ${error.message}`);
     }
   };
 
@@ -407,41 +427,41 @@ function DealsView({ deals, onLoad, toast }) {
   return (
     <div className="module-view">
       <div className="module-header">
-        <h2>Deals Pipeline</h2>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add Deal</button>
+        <h2>{t('deals.title')}</h2>
+        <button className="btn btn-primary" onClick={() => setShowModal(true)}>{t('deals.addDeal')}</button>
       </div>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Add Deal">
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={t('deals.addDeal')}>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Title *</label>
+            <label>{t('deals.title')} *</label>
             <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} required />
           </div>
           <div className="form-group">
-            <label>Value ($)</label>
+            <label>{t('deals.value')}</label>
             <input type="number" value={formData.value} onChange={(e) => setFormData({ ...formData, value: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>Stage</label>
+            <label>{t('deals.stage')}</label>
             <select value={formData.stage} onChange={(e) => setFormData({ ...formData, stage: e.target.value })}>
-              {stages.map((s) => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
+              {stages.map((s) => <option key={s} value={s}>{t(`deals.stages.${s}`)}</option>)}
             </select>
           </div>
           <div className="form-group">
-            <label>Probability (%)</label>
+            <label>{t('deals.probability')}</label>
             <input type="number" min="0" max="100" value={formData.probability} onChange={(e) => setFormData({ ...formData, probability: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>Close Date</label>
+            <label>{t('deals.closeDate')}</label>
             <input type="date" value={formData.close_date} onChange={(e) => setFormData({ ...formData, close_date: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>Notes</label>
+            <label>{t('deals.notes')}</label>
             <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
-            <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Save Deal</button>
+            <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>{t('deals.cancel')}</button>
+            <button type="submit" className="btn btn-primary">{t('deals.saveDeal')}</button>
           </div>
         </form>
       </Modal>
@@ -450,14 +470,14 @@ function DealsView({ deals, onLoad, toast }) {
         {stages.map((stage) => (
           <div key={stage} className="pipeline-column">
             <div className="pipeline-column-header">
-              <h4>{stage.replace('_', ' ')}</h4>
+              <h4>{t(`deals.stages.${stage}`)}</h4>
               <span className="column-count">{dealsByStage[stage].length}</span>
             </div>
             <div className="pipeline-column-content">
               {dealsByStage[stage].map((deal) => (
                 <div key={deal.id} className="deal-card">
                   <div className="deal-title">{deal.title}</div>
-                  <div className="deal-value">${deal.value?.toLocaleString()}</div>
+                  <div className="deal-value">¥{deal.value?.toLocaleString()}</div>
                 </div>
               ))}
             </div>
@@ -468,7 +488,7 @@ function DealsView({ deals, onLoad, toast }) {
   );
 }
 
-function TasksView({ tasks, onLoad, toast }) {
+function TasksView({ tasks, onLoad, toast, t }) {
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
     title: '', description: '', due_date: '', priority: 'medium', status: 'pending',
@@ -478,12 +498,12 @@ function TasksView({ tasks, onLoad, toast }) {
     e.preventDefault();
     try {
       await window.electronAPI.db.createTask(formData);
-      toast.success('Task created successfully');
+      toast.success(t('tasks.createdSuccess'));
       setFormData({ title: '', description: '', due_date: '', priority: 'medium', status: 'pending' });
       setShowModal(false);
       onLoad();
     } catch (error) {
-      toast.error(`Failed to create task: ${error.message}`);
+      toast.error(`${t('tasks.createFailed')}: ${error.message}`);
     }
   };
 
@@ -494,42 +514,42 @@ function TasksView({ tasks, onLoad, toast }) {
       });
       onLoad();
     } catch (error) {
-      toast.error(`Failed to update task: ${error.message}`);
+      toast.error(`${t('tasks.updateFailed')}: ${error.message}`);
     }
   };
 
   return (
     <div className="module-view">
       <div className="module-header">
-        <h2>Tasks</h2>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Add Task</button>
+        <h2>{t('tasks.title')}</h2>
+        <button className="btn btn-primary" onClick={() => setShowModal(true)}>{t('tasks.addTask')}</button>
       </div>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Add Task">
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={t('tasks.addTask')}>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Title *</label>
+            <label>{t('tasks.title')} *</label>
             <input type="text" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} required />
           </div>
           <div className="form-group">
-            <label>Description</label>
+            <label>{t('tasks.description')}</label>
             <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>Due Date</label>
+            <label>{t('tasks.dueDate')}</label>
             <input type="date" value={formData.due_date} onChange={(e) => setFormData({ ...formData, due_date: e.target.value })} />
           </div>
           <div className="form-group">
-            <label>Priority</label>
+            <label>{t('tasks.priority')}</label>
             <select value={formData.priority} onChange={(e) => setFormData({ ...formData, priority: e.target.value })}>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
+              <option value="low">{t('tasks.priorities.low')}</option>
+              <option value="medium">{t('tasks.priorities.medium')}</option>
+              <option value="high">{t('tasks.priorities.high')}</option>
             </select>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
-            <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Save Task</button>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75ren', marginTop: '1.5rem' }}>
+            <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>{t('tasks.cancel')}</button>
+            <button type="submit" className="btn btn-primary">{t('tasks.saveTask')}</button>
           </div>
         </form>
       </Modal>
@@ -545,15 +565,15 @@ function TasksView({ tasks, onLoad, toast }) {
                 <div className="task-title">{task.title}</div>
                 {task.description && <div className="task-description">{task.description}</div>}
                 <div className="task-meta">
-                  <span className={`priority-badge priority-${task.priority}`}>{task.priority}</span>
-                  {task.due_date && <span className="task-due">Due: {new Date(task.due_date).toLocaleDateString()}</span>}
+                  <span className={`priority-badge priority-${task.priority}`}>{t(`tasks.priorities.${task.priority}`)}</span>
+                  {task.due_date && <span className="task-due">{t('tasks.due')}: {new Date(task.due_date).toLocaleDateString()}</span>}
                 </div>
               </div>
-              <span className="task-status">{task.status}</span>
+              <span className="task-status">{t(`tasks.statuses.${task.status}`)}</span>
             </div>
           ))
         ) : (
-          <EmptyState message="No tasks yet. Add your first task!" />
+          <EmptyState message={t('tasks.noTasks')} />
         )}
       </div>
     </div>

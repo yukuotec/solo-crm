@@ -4,3 +4,5 @@ export { GlobalSearch } from './GlobalSearch';
 export { ExportMenu, exportToCSV } from './ExportMenu';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export { ContactDetail, CompanyDetail, DealDetail } from './DetailViews';
+export { LocaleProvider, useLocale, useTranslation } from '../i18n';
+export { LanguageSwitcher } from './LanguageSwitcher';
