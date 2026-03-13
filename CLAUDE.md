@@ -14,7 +14,8 @@ Solo Entrepreneur CRM - A local-first, minimalist desktop CRM application for si
 | UI Framework | React |
 | Database | SQLite (better-sqlite3) |
 | Backend | Node.js |
-| Styling | Tailwind CSS |
+| Styling | Custom CSS (dark mode) |
+| State | Zustand |
 
 ## Architecture
 
@@ -49,9 +50,51 @@ Solo Entrepreneur CRM - A local-first, minimalist desktop CRM application for si
 
 ## Implementation Status
 
-**Current Phase:** Phase 1 - Project Setup & Scaffolding
+**Current Phase:** Phase 2 Complete - Core UI ready for enhancement
 
-Refer to `docs/plans/2026-03-13-crm-implementation-plan.md` for the full implementation plan with milestones and priority order.
+### Completed
+- ✅ Phase 1: Project setup (Electron, React, Vite, Zustand, logging)
+- ✅ Phase 2: Database layer (SQLite, migrations, repositories, IPC)
+- ✅ Basic UI: Sidebar navigation, dashboard, all module views with CRUD forms
+- ✅ Pipeline Kanban board for deals
+- ✅ Task management with priorities
+
+### Pending (Phase 3+)
+- [ ] Tailwind CSS migration (currently custom CSS)
+- [ ] Reusable components: Modal, Toast, DataTable, SearchBar, Pagination
+- [ ] ErrorBoundary component
+- [ ] Global keyboard shortcuts
+- [ ] Global search across entities
+- [ ] CSV import/export
+- [ ] Activities module UI
+
+Refer to `docs/plans/2026-03-13-crm-implementation-plan.md` for full details.
+
+## Commands
+
+```bash
+# Development
+npm run dev          # Start Vite + Electron
+
+# Build
+npm run build        # Build renderer + create distributable
+npm run build:renderer  # Build renderer only
+
+# Code quality
+npm run lint         # Run ESLint
+npm run lint:fix     # Auto-fix issues
+npm run format       # Run Prettier
+```
+
+## Key Files
+
+- `src/main/main.js` - Electron main process entry
+- `src/main/preload.js` - IPC bridge (contextBridge)
+- `src/main/ipc-handlers.js` - All IPC request handlers
+- `src/db/database.js` - SQLite init + migrations
+- `src/db/repositories/` - Data repositories (CRUD)
+- `src/shared/store.js` - Zustand state management
+- `src/renderer/App.jsx` - Main React component
 
 ## Design Principles
 
