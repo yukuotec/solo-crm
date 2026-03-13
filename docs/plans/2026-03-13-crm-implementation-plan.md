@@ -13,15 +13,23 @@
 - [ ] Configure webpack/vite bundler for Electron + React
 - [ ] Set up ESLint + Prettier for code quality
 - [ ] Initialize git repository (done)
+- [ ] Choose state management (Zustand recommended for simplicity)
 
 ### Milestone 1.2: Electron Base
 - [ ] Create main process (main.js)
 - [ ] Create preload script for secure IPC
 - [ ] Set up Electron window with React renderer
 - [ ] Configure app icons and metadata
+- [ ] Enable context isolation, disable remote module
+- [ ] Set up Content Security Policy
 - [ ] Test basic Electron app launches
 
-**Deliverable:** Empty Electron app with React renders successfully
+### Milestone 1.3: Logging
+- [ ] Set up main process logging (file + console)
+- [ ] Set up renderer process logging
+- [ ] Define log levels (error, warn, info, debug)
+
+**Deliverable:** Empty Electron app with React renders successfully, logging configured
 
 ---
 
@@ -74,8 +82,14 @@
 - [ ] Create EmptyState component
 - [ ] Create LoadingState component
 - [ ] Create Toast/Notification component
+- [ ] Create ErrorBoundary component (React error boundaries)
 
-**Deliverable:** Reusable UI component library ready
+### Milestone 3.4: Keyboard Shortcuts
+- [ ] Global shortcuts (Cmd/Ctrl+N for new, Cmd/Ctrl+K for search)
+- [ ] Keyboard navigation (arrow keys, Enter, Escape)
+- [ ] Shortcuts infrastructure (extensible for module-specific shortcuts)
+
+**Deliverable:** Reusable UI component library ready, keyboard navigation functional
 
 ---
 
@@ -132,26 +146,21 @@
 
 ## Phase 5: Polish & UX
 
-### Milestone 5.1: Keyboard Shortcuts
-- [ ] Global shortcuts (Cmd/Ctrl+N for new, Cmd/Ctrl+K for search)
-- [ ] Module-specific shortcuts
-- [ ] Keyboard navigation (arrow keys, Enter, Escape)
-- [ ] Shortcuts cheat sheet (Help menu)
-
-### Milestone 5.2: Search & Filter
-- [ ] Global search (contacts, companies, deals)
+### Milestone 5.1: Global Search
+- [ ] Global search across contacts, companies, deals
+- [ ] Search keyboard shortcut (Cmd/Ctrl+K) launcher
 - [ ] Advanced filters per module
 - [ ] Saved filters (optional stretch goal)
 
-### Milestone 5.3: Data Import/Export
+### Milestone 5.2: Data Import/Export
 - [ ] Export to CSV (contacts, companies, deals)
 - [ ] Import from CSV (basic support)
 - [ ] Database backup reminder
 
-### Milestone 5.4: Error Handling
+### Milestone 5.3: Error Handling
 - [ ] User-friendly error messages
 - [ ] Graceful degradation
-- [ ] Logging for debugging
+- [ ] IPC error propagation to UI
 
 **Deliverable:** Polished, user-friendly application
 
@@ -208,14 +217,26 @@
 
 | Phase | Estimated Time |
 |-------|---------------|
-| Phase 1: Setup | 1-2 days |
+| Phase 1: Setup | 2-3 days |
 | Phase 2: Database | 2-3 days |
-| Phase 3: UI Components | 2-3 days |
+| Phase 3: UI Components | 3-4 days |
 | Phase 4: Features | 5-7 days |
-| Phase 5: Polish | 2-3 days |
+| Phase 5: Polish | 1-2 days |
 | Phase 6: Testing | 2-3 days |
 | Phase 7: Build | 1-2 days |
-| **Total** | **15-23 days** |
+| **Total** | **16-24 days** |
+
+---
+
+## Development Approach: Vertical Slices
+
+After Phase 3 (UI Components), consider building **one complete feature end-to-end** before tackling all modules:
+
+1. Build Contacts module fully (DB → IPC → UI → Tests)
+2. This validates the entire architecture early
+3. Then replicate the pattern for Companies, Deals, etc.
+
+This approach catches integration issues sooner than building all layers horizontally.
 
 ---
 
@@ -230,7 +251,7 @@ If time-constrained, build in this order:
 5. ✅ Dashboard (basic stats)
 6. ✅ Tasks module
 7. ⏸️ Activities module (can be v1.1)
-8. ⏸️ Advanced features (import/export, keyboard shortcuts)
+8. ⏸️ Advanced features (import/export, global search, saved filters)
 
 ---
 
