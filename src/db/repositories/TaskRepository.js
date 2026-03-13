@@ -1,5 +1,5 @@
-const { dbManager } = require('./database');
-const { mainLogger } = require('../main/logger');
+const { dbManager } = require('../database');
+const { mainLogger } = require('../../main/logger');
 
 const LOG_PREFIX = '[TaskRepository]';
 
