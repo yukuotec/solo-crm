@@ -46,4 +46,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     deleteActivity: (id) => ipcRenderer.invoke('db:activities:delete', id),
     getRecentActivities: (limit) => ipcRenderer.invoke('db:activities:recent', limit),
   },
+
+  // File system operations
+  saveFile: (filePath, content) => ipcRenderer.invoke('file:save', filePath, content),
+  showSaveDialog: (defaultPath) => ipcRenderer.invoke('file:saveDialog', defaultPath),
 });

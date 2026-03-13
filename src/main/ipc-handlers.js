@@ -1,4 +1,5 @@
-const { ipcMain } = require('electron');
+const fs = require('fs');
+const { ipcMain, dialog } = require('electron');
 const { dbManager } = require('../db/database');
 const {
   ContactRepository,
@@ -33,6 +34,29 @@ function initializeDbHandlers() {
       platform: process.platform,
       userDataPath: app.getPath('userData'),
     };
+  });
+
+  // File system handlers for export
+  ipcMain.handle('file:save', async (_, filePath, content) => {
+    try {
+      fs.writeFileSync(filePath, content, 'utf-8');
+      return { success: true };
+    } catch (error) {
+      mainLogger.error(`${LOG_PREFIX} Error saving file`, { error: error.message });
+      throw error;
+    }
+  });
+
+  ipcMain.handle('file:saveDialog', async (_, defaultPath) => {
+    try {
+      const result = await dialog.showSaveDialog({
+        defaultPath,
+      });
+      return result.filePath;
+    } catch (error) {
+      mainLogger.error(`${LOG_PREFIX} Error showing save dialog`, { error: error.message });
+      throw error;
+    }
   });
 
   // Contact handlers
