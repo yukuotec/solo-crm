@@ -3,3 +3,4 @@ export { Modal, ConfirmModal } from './Modal';
 export { GlobalSearch } from './GlobalSearch';
 export { ExportMenu, exportToCSV } from './ExportMenu';
 export { default as ErrorBoundary } from './ErrorBoundary';
+export { ContactDetail, CompanyDetail, DealDetail } from './DetailViews';
