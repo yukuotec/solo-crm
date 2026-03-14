@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import { useToast } from './Toast';
 import { useTranslation } from '../i18n';
+import { ActivityTimeline } from './ActivityTimeline';
 
 export function ContactDetail({ contact, onClose, onDelete, onCompanyClick }) {
   const toast = useToast();
@@ -104,19 +105,7 @@ export function ContactDetail({ contact, onClose, onDelete, onCompanyClick }) {
 
             <div className="detail-section">
               <h4>Activities ({relatedData.activities.length})</h4>
-              {relatedData.activities.length > 0 ? (
-                <div className="related-list">
-                  {relatedData.activities.map(activity => (
-                    <div key={activity.id} className="related-item">
-                      <span className="activity-type">{activity.type}</span>
-                      <span className="related-name">{activity.notes || 'No notes'}</span>
-                      <span className="related-meta">{new Date(activity.date).toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="no-related">No activities</p>
-              )}
+              <ActivityTimeline activities={relatedData.activities} />
             </div>
           </>
         )}
@@ -230,19 +219,7 @@ export function CompanyDetail({ company, onClose, onDelete, onContactClick }) {
 
             <div className="detail-section">
               <h4>{t('detail.activities')} ({relatedData.activities.length})</h4>
-              {relatedData.activities.length > 0 ? (
-                <div className="related-list">
-                  {relatedData.activities.map(activity => (
-                    <div key={activity.id} className="related-item">
-                      <span className="activity-type">{activity.type}</span>
-                      <span className="related-name">{activity.notes || t('detail.noNotes')}</span>
-                      <span className="related-meta">{new Date(activity.date).toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="no-related">{t('detail.noActivities')}</p>
-              )}
+              <ActivityTimeline activities={relatedData.activities} />
             </div>
           </>
         )}
@@ -327,18 +304,7 @@ export function DealDetail({ deal, onClose, onDelete, onCompanyClick, onContactC
 
         <div className="detail-section">
           <h4>Activities ({activities.length})</h4>
-          {activities.length > 0 ? (
-            <div className="related-list">
-              {activities.map(activity => (
-                <div key={activity.id} className="related-item">
-                  <span className="activity-type">{activity.type}</span>
-                  <span className="related-meta">{new Date(activity.date).toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="no-related">No activities</p>
-          )}
+          <ActivityTimeline activities={activities} />
         </div>
 
         <div className="detail-actions">
