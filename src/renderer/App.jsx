@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Fragment } from 'react';
 import { logger } from './logger';
-import { ToastProvider, useToast, GlobalSearch, Modal, ErrorBoundary, useTranslation, LanguageSwitcher, LocaleProvider, ImportDialog, AISearchInput, ActivityList, ConfirmModal } from './components';
+import { ToastProvider, useToast, GlobalSearch, Modal, ErrorBoundary, useTranslation, LanguageSwitcher, LocaleProvider, ImportDialog, AISearchInput, ActivityList, ConfirmModal, DataTable } from './components';
 import { useContactStore, useCompanyStore, useDealStore, useTaskStore, useActivityStore } from '../shared/store';
 
 function AppContent() {
@@ -433,30 +433,19 @@ function ContactsView({ contacts, onLoad, toast, t }) {
         type="contacts"
       />
 
-      <div className="table-container">
-        {contacts.length > 0 ? (
-          <table className="data-table">
-            <thead>
-              <tr><th>{t('contacts.name')}</th><th>{t('contacts.email')}</th><th>{t('contacts.phone')}</th><th>{t('contacts.notes')}</th><th>操作</th></tr>
-            </thead>
-            <tbody>
-              {contacts.map((contact) => (
-                <tr key={contact.id}>
-                  <td className="font-medium">{contact.name}</td>
-                  <td>{contact.email || '-'}</td>
-                  <td>{contact.phone || '-'}</td>
-                  <td>{contact.notes ? contact.notes.slice(0, 50) + (contact.notes.length > 50 ? '...' : '') : '-'}</td>
-                  <td>
-                    <button className="btn btn-sm btn-danger" onClick={() => handleDelete(contact)}>{t('buttons.delete')}</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <EmptyState message={t('contacts.noContacts')} />
-        )}
-      </div>
+      <DataTable
+        columns={[
+          { key: 'name', title: t('contacts.name'), render: (row) => <span className="font-medium">{row.name}</span> },
+          { key: 'email', title: t('contacts.email'), render: (row) => row.email || '-' },
+          { key: 'phone', title: t('contacts.phone'), render: (row) => row.phone || '-' },
+          { key: 'notes', title: t('contacts.notes'), render: (row) => row.notes ? row.notes.slice(0, 50) + (row.notes.length > 50 ? '...' : '') : '-' },
+          { key: 'actions', title: '操作', sortable: false, render: (row) => (
+            <button className="btn btn-sm btn-danger" onClick={() => handleDelete(row)}>{t('buttons.delete')}</button>
+          )}
+        ]}
+        data={contacts}
+        pageSize={10}
+      />
 
       <ConfirmModal
         isOpen={showConfirmModal}
@@ -629,51 +618,22 @@ function CompaniesView({ companies, onLoad, toast, t, viewMode, onViewModeChange
           ))}
         </div>
       ) : (
-        <div className="table-container">
-          {companies.length > 0 ? (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>{t('companies.name')}</th>
-                  <th>{t('companies.website')}</th>
-                  <th>{t('companies.industry')}</th>
-                  <th>{t('companies.phone')}</th>
-                  <th>{t('companies.address')}</th>
-                  <th>{t('companies.notes')}</th>
-                  <th>{t('companies.contacts')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {companies.map((company) => {
-                  const addressTruncated = company.address ? company.address.slice(0, 20) + (company.address.length > 20 ? '...' : '') : '-';
-                  const notesTruncated = company.notes ? company.notes.slice(0, 30) + (company.notes.length > 30 ? '...' : '') : '-';
-                  return (
-                    <tr key={company.id}>
-                      <td className="font-medium">{company.name}</td>
-                      <td>
-                        {company.website ? (
-                          <a href={company.website} target="_blank" rel="noopener noreferrer" title={company.website}>
-                            {company.website.length > 25 ? company.website.slice(0, 25) + '...' : company.website}
-                          </a>
-                        ) : '-'}
-                      </td>
-                      <td>{company.industry || '-'}</td>
-                      <td>{company.phone || '-'}</td>
-                      <td title={company.address || ''}>{addressTruncated}</td>
-                      <td title={company.notes || ''}>{notesTruncated}</td>
-                      <td>{company.contact_count || 0}</td>
-                      <td>
-                        <button className="btn btn-sm btn-danger" onClick={() => handleDelete(company)}>{t('buttons.delete')}</button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          ) : (
-            <EmptyState message={t('companies.noCompanies')} />
-          )}
-        </div>
+        <DataTable
+          columns={[
+            { key: 'name', title: t('companies.name'), render: (row) => <span className="font-medium">{row.name}</span> },
+            { key: 'website', title: t('companies.website'), render: (row) => row.website ? <a href={row.website} target="_blank" rel="noopener noreferrer" title={row.website}>{row.website.length > 25 ? row.website.slice(0, 25) + '...' : row.website}</a> : '-' },
+            { key: 'industry', title: t('companies.industry'), render: (row) => row.industry || '-' },
+            { key: 'phone', title: t('companies.phone'), render: (row) => row.phone || '-' },
+            { key: 'address', title: t('companies.address'), render: (row) => row.address ? row.address.slice(0, 20) + (row.address.length > 20 ? '...' : '') : '-' },
+            { key: 'notes', title: t('companies.notes'), render: (row) => row.notes ? row.notes.slice(0, 30) + (row.notes.length > 30 ? '...' : '') : '-' },
+            { key: 'contact_count', title: t('companies.contacts'), render: (row) => row.contact_count || 0 },
+            { key: 'actions', title: '操作', sortable: false, render: (row) => (
+              <button className="btn btn-sm btn-danger" onClick={() => handleDelete(row)}>{t('buttons.delete')}</button>
+            )}
+          ]}
+          data={companies}
+          pageSize={10}
+        />
       )}
 
       <ConfirmModal
@@ -943,29 +903,32 @@ function TasksView({ tasks, onLoad, toast, t }) {
         </form>
       </Modal>
 
-      <div className="tasks-list">
-        {tasks.length > 0 ? (
-          tasks.map((task) => (
-            <div key={task.id} className={`task-row ${task.status === 'completed' ? 'completed' : ''}`}>
-              <button className={`task-checkbox ${task.status === 'completed' ? 'checked' : ''}`} onClick={() => toggleTaskStatus(task)}>
-                {task.status === 'completed' ? '✓' : ''}
+      <DataTable
+        columns={[
+          { key: 'title', title: t('tasks.title'), render: (row) => (
+            <span className={`font-medium ${row.status === 'completed' ? 'completed' : ''}`}>{row.title}</span>
+          )},
+          { key: 'description', title: t('tasks.description'), render: (row) => row.description ? row.description.slice(0, 50) + (row.description.length > 50 ? '...' : '') : '-' },
+          { key: 'due_date', title: t('tasks.dueDate'), render: (row) => row.due_date ? new Date(row.due_date).toLocaleDateString() : '-' },
+          { key: 'priority', title: t('tasks.priority'), render: (row) => (
+            <span className={`priority-badge priority-${row.priority}`}>{t(`tasks.priorities.${row.priority}`)}</span>
+          )},
+          { key: 'status', title: t('tasks.status'), render: (row) => {
+            const statusMap = { pending: '待处理', in_progress: '进行中', completed: '已完成' };
+            return <span className={`status-badge status-${row.status}`}>{statusMap[row.status] || row.status}</span>;
+          }},
+          { key: 'actions', title: '操作', sortable: false, render: (row) => (
+            <Fragment>
+              <button className="btn btn-sm btn-secondary" onClick={() => toggleTaskStatus(row)} style={{ marginRight: '0.5rem' }}>
+                {row.status === 'completed' ? '↩' : '✓'}
               </button>
-              <div className="task-info">
-                <div className="task-title">{task.title}</div>
-                {task.description && <div className="task-description">{task.description}</div>}
-                <div className="task-meta">
-                  <span className={`priority-badge priority-${task.priority}`}>{t(`tasks.priorities.${task.priority}`)}</span>
-                  {task.due_date && <span className="task-due">{t('tasks.due')}: {new Date(task.due_date).toLocaleDateString()}</span>}
-                </div>
-              </div>
-              <span className="task-status">{t(`tasks.statuses.${task.status}`)}</span>
-              <button className="btn btn-sm btn-danger task-delete-btn" onClick={() => handleDelete(task)}>{t('buttons.delete')}</button>
-            </div>
-          ))
-        ) : (
-          <EmptyState message={t('tasks.noTasks')} />
-        )}
-      </div>
+              <button className="btn btn-sm btn-danger" onClick={() => handleDelete(row)}>{t('buttons.delete')}</button>
+            </Fragment>
+          )}
+        ]}
+        data={tasks}
+        pageSize={10}
+      />
 
       <ConfirmModal
         isOpen={showConfirmModal}

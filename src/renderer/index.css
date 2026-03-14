@@ -819,12 +819,31 @@ body {
   font-weight: 500;
 }
 
+
 .task-status {
   font-size: 0.6875rem;
   color: var(--text-subtle);
   text-transform: capitalize;
   font-weight: 500;
 }
+
+.status-badge {
+  font-size: 0.6875rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.status-badge.status-pending {
+  background-color: var(--warning-muted);
+  color: white;
+}
+
+.status-badge.status-completed {
+  background-color: var(--success-muted);
+  color: white;
+}
+
 
 /* Empty state */
 .empty-state {
