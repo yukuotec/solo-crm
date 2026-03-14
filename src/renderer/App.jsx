@@ -345,7 +345,26 @@ function translateStage(stage, t) {
 function ContactsView({ contacts, onLoad, toast, t }) {
   const [showModal, setShowModal] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [contactToDelete, setContactToDelete] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', notes: '' });
+
+  const handleDelete = (contact) => {
+    setContactToDelete(contact);
+    setShowConfirmModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await window.electronAPI.db.deleteContact(contactToDelete.id);
+      toast.success(t('contacts.deletedSuccess'));
+      setShowConfirmModal(false);
+      setContactToDelete(null);
+      onLoad();
+    } catch (error) {
+      toast.error(`${t('contacts.deleteFailed')}: ${error.message}`);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -418,7 +437,7 @@ function ContactsView({ contacts, onLoad, toast, t }) {
         {contacts.length > 0 ? (
           <table className="data-table">
             <thead>
-              <tr><th>{t('contacts.name')}</th><th>{t('contacts.email')}</th><th>{t('contacts.phone')}</th><th>{t('contacts.notes')}</th></tr>
+              <tr><th>{t('contacts.name')}</th><th>{t('contacts.email')}</th><th>{t('contacts.phone')}</th><th>{t('contacts.notes')}</th><th>操作</th></tr>
             </thead>
             <tbody>
               {contacts.map((contact) => (
@@ -427,6 +446,9 @@ function ContactsView({ contacts, onLoad, toast, t }) {
                   <td>{contact.email || '-'}</td>
                   <td>{contact.phone || '-'}</td>
                   <td>{contact.notes ? contact.notes.slice(0, 50) + (contact.notes.length > 50 ? '...' : '') : '-'}</td>
+                  <td>
+                    <button className="btn btn-sm btn-danger" onClick={() => handleDelete(contact)}>{t('buttons.delete')}</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -435,6 +457,16 @@ function ContactsView({ contacts, onLoad, toast, t }) {
           <EmptyState message={t('contacts.noContacts')} />
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        title={t('confirmModal.deleteTitle')}
+        message={t('contacts.confirmDelete')}
+        confirmText={t('buttons.delete')}
+        cancelText={t('buttons.cancel')}
+        onConfirm={confirmDelete}
+        onCancel={() => setShowConfirmModal(false)}
+      />
     </div>
   );
 }
@@ -442,7 +474,26 @@ function ContactsView({ contacts, onLoad, toast, t }) {
 function CompaniesView({ companies, onLoad, toast, t, viewMode, onViewModeChange }) {
   const [showModal, setShowModal] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [companyToDelete, setCompanyToDelete] = useState(null);
   const [formData, setFormData] = useState({ name: '', website: '', industry: '', phone: '', address: '', notes: '' });
+
+  const handleDelete = (company) => {
+    setCompanyToDelete(company);
+    setShowConfirmModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await window.electronAPI.db.deleteCompany(companyToDelete.id);
+      toast.success(t('companies.deletedSuccess'));
+      setShowConfirmModal(false);
+      setCompanyToDelete(null);
+      onLoad();
+    } catch (error) {
+      toast.error(`${t('companies.deleteFailed')}: ${error.message}`);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -571,6 +622,9 @@ function CompaniesView({ companies, onLoad, toast, t, viewMode, onViewModeChange
                   <span>{t('dashboard.activeDeal')}: <strong>{company.active_deal}</strong></span>
                 </div>
               )}
+              <div className="company-card-actions">
+                <button className="btn btn-sm btn-danger" onClick={() => handleDelete(company)}>{t('buttons.delete')}</button>
+              </div>
             </div>
           ))}
         </div>
@@ -608,6 +662,9 @@ function CompaniesView({ companies, onLoad, toast, t, viewMode, onViewModeChange
                       <td title={company.address || ''}>{addressTruncated}</td>
                       <td title={company.notes || ''}>{notesTruncated}</td>
                       <td>{company.contact_count || 0}</td>
+                      <td>
+                        <button className="btn btn-sm btn-danger" onClick={() => handleDelete(company)}>{t('buttons.delete')}</button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -618,16 +675,45 @@ function CompaniesView({ companies, onLoad, toast, t, viewMode, onViewModeChange
           )}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        title={t('confirmModal.deleteTitle')}
+        message={t('companies.confirmDelete')}
+        confirmText={t('buttons.delete')}
+        cancelText={t('buttons.cancel')}
+        onConfirm={confirmDelete}
+        onCancel={() => setShowConfirmModal(false)}
+      />
     </div>
   );
 }
 
 function DealsView({ deals, onLoad, toast, t }) {
   const [showModal, setShowModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [dealToDelete, setDealToDelete] = useState(null);
   const [formData, setFormData] = useState({
     title: '', stage: 'lead', value: '', probability: 0, close_date: '', notes: '',
   });
   const [draggedDeal, setDraggedDeal] = useState(null);
+
+  const handleDelete = (deal) => {
+    setDealToDelete(deal);
+    setShowConfirmModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await window.electronAPI.db.deleteDeal(dealToDelete.id);
+      toast.success(t('deals.deletedSuccess'));
+      setShowConfirmModal(false);
+      setDealToDelete(null);
+      onLoad();
+    } catch (error) {
+      toast.error(`${t('deals.deleteFailed')}: ${error.message}`);
+    }
+  };
 
   const stages = ['lead', 'qualified', 'proposal', 'negotiation', 'closed_won', 'closed_lost'];
 
@@ -751,21 +837,51 @@ function DealsView({ deals, onLoad, toast, t }) {
                 >
                   <div className="deal-title">{deal.title}</div>
                   <div className="deal-value">¥{deal.value?.toLocaleString()}</div>
+                  <button className="btn btn-sm btn-danger deal-delete-btn" onClick={(e) => { e.stopPropagation(); handleDelete(deal); }}>{t('buttons.delete')}</button>
                 </div>
               ))}
             </div>
           </div>
         ))}
       </div>
+
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        title={t('confirmModal.deleteTitle')}
+        message={t('deals.confirmDelete')}
+        confirmText={t('buttons.delete')}
+        cancelText={t('buttons.cancel')}
+        onConfirm={confirmDelete}
+        onCancel={() => setShowConfirmModal(false)}
+      />
     </div>
   );
 }
 
 function TasksView({ tasks, onLoad, toast, t }) {
   const [showModal, setShowModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
   const [formData, setFormData] = useState({
     title: '', description: '', due_date: '', priority: 'medium', status: 'pending',
   });
+
+  const handleDelete = (task) => {
+    setTaskToDelete(task);
+    setShowConfirmModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await window.electronAPI.db.deleteTask(taskToDelete.id);
+      toast.success(t('tasks.deletedSuccess'));
+      setShowConfirmModal(false);
+      setTaskToDelete(null);
+      onLoad();
+    } catch (error) {
+      toast.error(`${t('tasks.deleteFailed')}: ${error.message}`);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -843,12 +959,23 @@ function TasksView({ tasks, onLoad, toast, t }) {
                 </div>
               </div>
               <span className="task-status">{t(`tasks.statuses.${task.status}`)}</span>
+              <button className="btn btn-sm btn-danger task-delete-btn" onClick={() => handleDelete(task)}>{t('buttons.delete')}</button>
             </div>
           ))
         ) : (
           <EmptyState message={t('tasks.noTasks')} />
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        title={t('confirmModal.deleteTitle')}
+        message={t('tasks.confirmDelete')}
+        confirmText={t('buttons.delete')}
+        cancelText={t('buttons.cancel')}
+        onConfirm={confirmDelete}
+        onCancel={() => setShowConfirmModal(false)}
+      />
     </div>
   );
 }
