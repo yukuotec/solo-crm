@@ -401,7 +401,57 @@ function initializeDbHandlers() {
     }
   });
 
-  mainLogger.info(`${LOG_PREFIX} All database IPC handlers initialized`);
+    // AI Search handler
+  ipcMain.handle('ai:search', async (_, { query, type }) => {
+    mainLogger.info(`${LOG_PREFIX} Handling ai:search for query="${query}", type="${type}"`);
+    try {
+      // 本地搜索优先 - 在现有数据中搜索
+      let localResults = null;
+      
+      if (type === 'company') {
+        const companies = repos.companies.findAll();
+        localResults = companies.find(c => 
+          c.name.toLowerCase().includes(query.toLowerCase()) ||
+          c.website?.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        if (!localResults) {
+          // 模拟 AI 搜索结果（实际项目中可调用外部 API）
+          localResults = {
+            name: query,
+            website: `https://www.${query.toLowerCase().replace(/\s+/g, '')}.com`,
+            industry: '科技/互联网',
+            phone: '400-xxx-xxxx',
+            address: '北京市海淀区',
+            notes: `关于 ${query} 的简介信息 - 可通过真实 API 获取`,
+          };
+        }
+      } else if (type === 'contact') {
+        const contacts = repos.contacts.findAll();
+        localResults = contacts.find(c => 
+          c.name.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        if (!localResults) {
+          // 模拟 AI 搜索结果
+          localResults = {
+            name: query,
+            email: `${query.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+            phone: '138-xxxx-xxxx',
+            company_name: '未知公司',
+            notes: `关于 ${query} 的简介信息 - 可通过真实 API 获取`,
+          };
+        }
+      }
+
+      return { success: true, data: localResults };
+    } catch (error) {
+      mainLogger.error(`${LOG_PREFIX} Error in ai:search`, { error: error.message });
+      return { success: false, error: error.message };
+    }
+  });
+
+mainLogger.info(`${LOG_PREFIX} All database IPC handlers initialized`);
 }
 
 // Helper function to map various header names to our field names
@@ -468,59 +518,5 @@ function mapHeader(header) {
   const cleaned = header.trim().toLowerCase();
   return mappings[cleaned] || null;
 }
-
-  // AI Search handler
-  ipcMain.handle('ai:search', async (_, { query, type }) => {
-    mainLogger.info(`${LOG_PREFIX} Handling ai:search for query="${query}", type="${type}"`);
-    try {
-      // 本地搜索优先 - 在现有数据中搜索
-      let localResults = null;
-      
-      if (type === 'company') {
-        const companies = repos.companies.findAll();
-        localResults = companies.find(c => 
-          c.name.toLowerCase().includes(query.toLowerCase()) ||
-          c.website?.toLowerCase().includes(query.toLowerCase())
-        );
-        
-        if (!localResults) {
-          // 模拟 AI 搜索结果（实际项目中可调用外部 API）
-          // 这里返回一个示例数据结构
-          localResults = {
-            name: query,
-            website: `https://www.${query.toLowerCase().replace(/\s+/g, '')}.com`,
-            industry: '科技/互联网',
-            phone: '400-xxx-xxxx',
-            address: '北京市海淀区',
-            notes: `关于 ${query} 的简介信息 - 可通过真实 API 获取`,
-          };
-        }
-      } else if (type === 'contact') {
-        const contacts = repos.contacts.findAll();
-        localResults = contacts.find(c => 
-          c.name.toLowerCase().includes(query.toLowerCase())
-        );
-        
-        if (!localResults) {
-          // 模拟 AI 搜索结果
-          localResults = {
-            name: query,
-            email: `${query.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-            phone: '138-xxxx-xxxx',
-            company_name: '未知公司',
-            notes: `关于 ${query} 的简介信息 - 可通过真实 API 获取`,
-          };
-        }
-      }
-
-      return { success: true, data: localResults };
-    } catch (error) {
-      mainLogger.error(`${LOG_PREFIX} Error in ai:search`, { error: error.message });
-      return { success: false, error: error.message };
-    }
-  });
-
-  mainLogger.info(`${LOG_PREFIX} AI search handler initialized`);
-};
 
 module.exports = { initializeDbHandlers };

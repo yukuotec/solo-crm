@@ -643,7 +643,7 @@ function DealsView({ deals, onLoad, toast, t }) {
     
     try {
       await window.electronAPI.db.updateDeal(draggedDeal.id, { stage: targetStage });
-      toast.success(`商谈已移动到 ${t(\`deals.stages.${targetStage}\`)}`);
+      toast.success(`商谈已移动到 ${t(`deals.stages.${targetStage}`)}`);
       setDraggedDeal(null);
       onLoad();
     } catch (error) {
