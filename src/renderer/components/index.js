@@ -9,3 +9,4 @@ export { LanguageSwitcher } from './LanguageSwitcher';
 export { ImportDialog } from './ImportDialog';
 export { AISearchInput } from './AISearchInput';
 export { ActivityList } from './ActivityList';
+export { ActivityTimeline } from './ActivityTimeline';
