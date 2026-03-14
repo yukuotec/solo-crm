@@ -34,6 +34,25 @@ export const translations = {
       noDeals: '暂无销售机会',
       noUpcomingTasks: '暂无近期任务',
       deals: '个机会',
+      alerts: '警报',
+      quickStats: '快速统计',
+      newDealsThisMonth: '本月新增商谈',
+      winRate: '胜率',
+      avgDealSize: '平均商谈金额',
+      funnelView: '漏斗图',
+      staleDealsAlert: '{count} 个商谈超过 7 天未更新',
+      closingSoonAlert: '本周有 {count} 个商谈预计成交',
+      viewToggle: {
+        card: '卡片视图',
+        table: '表格视图',
+      },
+      estimatedAnnualSpend: '预估年支出',
+      contactsCount: '{count} 联系人',
+      activeDeal: '进行中商谈',
+      noActiveDeal: '暂无进行中商谈',
+      industry: '行业',
+      location: '地区',
+      employees: '员工',
     },
 
     // 联系人
@@ -83,6 +102,11 @@ export const translations = {
       updateFailed: '更新公司失败',
       deleteFailed: '删除公司失败',
       contacts: '联系人',
+      deals: '销售机会',
+      cardView: '卡片视图',
+      tableView: '表格视图',
+      contactsCount: '{count} 个联系人',
+      dealValue: '预估金额',
     },
 
     // 销售机会
@@ -205,8 +229,25 @@ export const translations = {
       linkedTasks: '相关任务',
       activities: '活动记录',
       noRelated: '暂无相关记录',
+      noContacts: '暂无联系人',
+      noDeals: '暂无销售机会',
+      noActivities: '暂无活动记录',
+      noNotes: '无备注',
       delete: '删除',
       close: '关闭',
+    },
+
+    // 通用
+    alert: {
+      warning: '警告',
+      error: '错误',
+      info: '提示',
+    },
+
+    priority: {
+      hot: '热点',
+      warm: '温点',
+      cold: '冷点',
     },
 
     // Toast 消息
@@ -255,6 +296,25 @@ export const translations = {
       noDeals: 'No deals in pipeline',
       noUpcomingTasks: 'No upcoming tasks',
       deals: 'deals',
+      alerts: 'Alerts',
+      quickStats: 'Quick Stats',
+      newDealsThisMonth: 'New Deals This Month',
+      winRate: 'Win Rate',
+      avgDealSize: 'Avg Deal Size',
+      funnelView: 'Funnel View',
+      staleDealsAlert: '{count} deals untouched for over 7 days',
+      closingSoonAlert: '{count} deals expected to close this week',
+      viewToggle: {
+        card: 'Card View',
+        table: 'Table View',
+      },
+      estimatedAnnualSpend: 'Est. Annual Spend',
+      contactsCount: '{count} contacts',
+      activeDeal: 'Active Deal',
+      noActiveDeal: 'No active deals',
+      industry: 'Industry',
+      location: 'Location',
+      employees: 'Employees',
     },
 
     // Contacts
@@ -304,6 +364,11 @@ export const translations = {
       updateFailed: 'Failed to update company',
       deleteFailed: 'Failed to delete company',
       contacts: 'Contacts',
+      deals: 'Deals',
+      cardView: 'Card View',
+      tableView: 'Table View',
+      contactsCount: '{count} contacts',
+      dealValue: 'Estimated Value',
     },
 
     // Deals
@@ -426,8 +491,25 @@ export const translations = {
       linkedTasks: 'Linked Tasks',
       activities: 'Activities',
       noRelated: 'No related records',
+      noContacts: 'No contacts',
+      noDeals: 'No deals',
+      noActivities: 'No activities',
+      noNotes: 'No notes',
       delete: 'Delete',
       close: 'Close',
+    },
+
+    // Alerts & Priority
+    alert: {
+      warning: 'Warning',
+      error: 'Error',
+      info: 'Info',
+    },
+
+    priority: {
+      hot: 'Hot',
+      warm: 'Warm',
+      cold: 'Cold',
     },
 
     // Toast

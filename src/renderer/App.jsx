@@ -8,9 +8,9 @@ function AppContent() {
   const [appInfo, setAppInfo] = useState(null);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [companyViewMode, setCompanyViewMode] = useState('table');
   const toast = useToast();
 
-  // Load stores
   const { contacts, loadContacts, createContact: storeCreateContact } = useContactStore();
   const { companies, loadCompanies, createCompany: storeCreateCompany } = useCompanyStore();
   const { deals, loadDeals, loadPipelineSummary, pipelineSummary } = useDealStore();
@@ -30,7 +30,6 @@ function AppContent() {
         setError(err.message);
       });
 
-    // Load all data
     loadContacts();
     loadCompanies();
     loadDeals();
@@ -81,6 +80,7 @@ function AppContent() {
             pipelineSummary={pipelineSummary}
             upcomingTasks={upcomingTasks}
             totalPipelineValue={totalPipelineValue}
+            deals={deals}
             t={t}
           />
         )}
@@ -90,7 +90,14 @@ function AppContent() {
         )}
 
         {activeTab === 'companies' && (
-          <CompaniesView companies={companies} onLoad={loadCompanies} toast={toast} t={t} />
+          <CompaniesView
+            companies={companies}
+            onLoad={loadCompanies}
+            toast={toast}
+            t={t}
+            viewMode={companyViewMode}
+            onViewModeChange={setCompanyViewMode}
+          />
         )}
 
         {activeTab === 'deals' && (
@@ -159,32 +166,124 @@ function Sidebar({ activeTab, setActiveTab, stats, appInfo, t }) {
   );
 }
 
-function Dashboard({ stats, pipelineSummary, upcomingTasks, totalPipelineValue, t }) {
+function Dashboard({ stats, pipelineSummary, upcomingTasks, totalPipelineValue, deals, t }) {
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+
+  const newDealsThisMonth = deals.filter((deal) => {
+    const dealDate = new Date(deal.created_at || deal.close_date);
+    return dealDate.getMonth() === currentMonth && dealDate.getFullYear() === currentYear;
+  });
+  const newDealsValue = newDealsThisMonth.reduce((sum, deal) => sum + (deal.value || 0), 0);
+
+  const closedWon = deals.filter((d) => d.stage === 'closed_won').length;
+  const closedLost = deals.filter((d) => d.stage === 'closed_lost').length;
+  const totalClosed = closedWon + closedLost;
+  const winRate = totalClosed > 0 ? Math.round((closedWon / totalClosed) * 100) : 0;
+
+  const avgDealSize = deals.length > 0
+    ? Math.round(deals.reduce((sum, d) => sum + (d.value || 0), 0) / deals.length)
+    : 0;
+
+  const alerts = [];
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  const staleDeals = deals.filter((deal) => {
+    const updatedAt = new Date(deal.updated_at || deal.created_at || now);
+    return updatedAt < sevenDaysAgo && !['closed_won', 'closed_lost'].includes(deal.stage);
+  });
+
+  if (staleDeals.length > 0) {
+    alerts.push({
+      type: 'warning',
+      message: t('dashboard.staleDealsAlert', { count: staleDeals.length })
+    });
+  }
+
+  const weekEnd = new Date();
+  weekEnd.setDate(weekEnd.getDate() + (7 - weekEnd.getDay()) % 7);
+  const closingSoon = deals.filter((deal) => {
+    if (!deal.close_date) return false;
+    const closeDate = new Date(deal.close_date);
+    return closeDate <= weekEnd && !['closed_won', 'closed_lost'].includes(deal.stage);
+  });
+
+  if (closingSoon.length > 0) {
+    alerts.push({
+      type: 'info',
+      message: t('dashboard.closingSoonAlert', { count: closingSoon.length })
+    });
+  }
+
+  const maxValue = Math.max(...pipelineSummary.map((s) => s.count), 1);
+
   return (
     <div className="dashboard">
       <h2>{t('dashboard.title')}</h2>
 
+      {alerts.length > 0 && (
+        <div className="alerts-container" style={{ marginBottom: '1.5rem' }}>
+          {alerts.map((alert, index) => (
+            <div key={index} className={`alert alert-${alert.type}`} role="alert">
+              <span className="alert-icon">{alert.type === 'warning' ? '⚠️' : 'ℹ️'}</span>
+              <span className="alert-message">{alert.message}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="quick-stats-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div className="quick-stat">
+          <span className="quick-stat-label">{t('dashboard.newDealsThisMonth')}</span>
+          <span className="quick-stat-value">{newDealsValue > 0 ? `¥${(newDealsValue / 10000).toFixed(0)} 万` : '¥0 万'}</span>
+        </div>
+        <div className="quick-stat">
+          <span className="quick-stat-label">{t('dashboard.winRate')}</span>
+          <span className="quick-stat-value">{winRate}%</span>
+        </div>
+        <div className="quick-stat">
+          <span className="quick-stat-label">{t('dashboard.avgDealSize')}</span>
+          <span className="quick-stat-value">{avgDealSize > 0 ? `¥${(avgDealSize / 10000).toFixed(0)} 万` : '¥0 万'}</span>
+        </div>
+      </div>
+
       <div className="stats-grid">
         <StatCard title={t('dashboard.totalContacts')} value={stats.totalContacts} icon="👥" color="#3b82f6" />
         <StatCard title={t('dashboard.totalCompanies')} value={stats.totalCompanies} icon="🏢" color="#22c55e" />
-        <StatCard title={t('dashboard.pipelineValue')} value={`¥${totalPipelineValue.toLocaleString()}`} icon="💰" color="#f59e0b" />
+        <StatCard title={t('dashboard.pipelineValue')} value={`¥${totalPipelineValue.toLocaleString()}`} icon="💰" color="#f59e0b" featured />
         <StatCard title={t('dashboard.pendingTasks')} value={stats.totalTasks} icon="✅" color="#8b5cf6" />
       </div>
 
       <div className="dashboard-grid">
         <div className="dashboard-card">
-          <h3>{t('dashboard.pipelineByStage')}</h3>
+          <h3>{t('dashboard.funnelView')}</h3>
           {pipelineSummary.length > 0 ? (
-            <div className="pipeline-summary">
-              {pipelineSummary.map((stage) => (
-                <div key={stage.stage} className="pipeline-stage">
-                  <div className="pipeline-stage-name">{translateStage(stage.stage, t)}</div>
-                  <div className="pipeline-stage-info">
-                    <span className="count">{stage.count} {t('dashboard.deals')}</span>
-                    <span className="value">¥{stage.total_value?.toLocaleString()}</span>
+            <div className="funnel-container">
+              {pipelineSummary.map((stage) => {
+                const percentage = Math.round((stage.count / maxValue) * 100);
+                return (
+                  <div key={stage.stage} className="funnel-item">
+                    <div className="funnel-label">
+                      <span className="funnel-stage-name">{translateStage(stage.stage, t)}</span>
+                    </div>
+                    <div className="funnel-bar-container">
+                      <div
+                        className="funnel-bar-fill"
+                        style={{ width: `${percentage}%` }}
+                        role="progressbar"
+                        aria-valuenow={stage.count}
+                        aria-valuemin={0}
+                        aria-valuemax={maxValue}
+                      />
+                    </div>
+                    <div className="funnel-meta">
+                      <span className="funnel-count">{stage.count}</span>
+                      <span className="funnel-value">¥{stage.total_value?.toLocaleString()}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <EmptyState message={t('dashboard.noDeals')} />
@@ -313,16 +412,16 @@ function ContactsView({ contacts, onLoad, toast, t }) {
   );
 }
 
-function CompaniesView({ companies, onLoad, toast, t }) {
+function CompaniesView({ companies, onLoad, toast, t, viewMode, onViewModeChange }) {
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({ name: '', website: '', industry: '', phone: '', notes: '' });
+  const [formData, setFormData] = useState({ name: '', website: '', industry: '', phone: '', address: '', notes: '' });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await window.electronAPI.db.createCompany(formData);
       toast.success(t('companies.createdSuccess'));
-      setFormData({ name: '', website: '', industry: '', phone: '', notes: '' });
+      setFormData({ name: '', website: '', industry: '', phone: '', address: '', notes: '' });
       setShowModal(false);
       onLoad();
     } catch (error) {
@@ -334,7 +433,25 @@ function CompaniesView({ companies, onLoad, toast, t }) {
     <div className="module-view">
       <div className="module-header">
         <h2>{t('companies.title')}</h2>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>{t('companies.addCompany')}</button>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <div className="view-toggle">
+            <button
+              className={`view-toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
+              onClick={() => onViewModeChange('table')}
+            >
+              {t('companies.tableView')}
+            </button>
+            <button
+              className={`view-toggle-btn ${viewMode === 'card' ? 'active' : ''}`}
+              onClick={() => onViewModeChange('card')}
+            >
+              {t('companies.cardView')}
+            </button>
+          </div>
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+            {t('companies.addCompany')}
+          </button>
+        </div>
       </div>
 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={t('companies.addCompany')}>
@@ -356,6 +473,10 @@ function CompaniesView({ companies, onLoad, toast, t }) {
             <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
           </div>
           <div className="form-group">
+            <label>{t('companies.address')}</label>
+            <input type="text" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
+          </div>
+          <div className="form-group">
             <label>{t('companies.notes')}</label>
             <textarea value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
           </div>
@@ -366,28 +487,91 @@ function CompaniesView({ companies, onLoad, toast, t }) {
         </form>
       </Modal>
 
-      <div className="table-container">
-        {companies.length > 0 ? (
-          <table className="data-table">
-            <thead>
-              <tr><th>{t('companies.name')}</th><th>{t('companies.website')}</th><th>{t('companies.industry')}</th><th>{t('companies.phone')}</th><th>{t('companies.contacts')}</th></tr>
-            </thead>
-            <tbody>
-              {companies.map((company) => (
-                <tr key={company.id}>
-                  <td className="font-medium">{company.name}</td>
-                  <td>{company.website ? <a href={company.website} target="_blank" rel="noopener noreferrer">{company.website}</a> : '-'}</td>
-                  <td>{company.industry || '-'}</td>
-                  <td>{company.phone || '-'}</td>
-                  <td>{company.contact_count || 0}</td>
+      {viewMode === 'card' ? (
+        <div className="company-card-grid">
+          {companies.map((company) => (
+            <div key={company.id} className="company-card">
+              <div className="company-card-header">
+                <span className="company-card-icon">🏢</span>
+                <h4 className="company-card-name">{company.name}</h4>
+              </div>
+              <div className="company-card-meta">
+                {company.industry && (
+                  <span className="company-card-info">
+                    <span>💼</span> {company.industry}
+                  </span>
+                )}
+                {company.address && (
+                  <span className="company-card-info">
+                    <span>📍</span> {company.address.slice(0, 20)}{company.address.length > 20 ? '...' : ''}
+                  </span>
+                )}
+              </div>
+              <div className="company-card-stats">
+                <div className="company-card-stat">
+                  <span className="company-card-stat-label">{t('dashboard.contactsCount', { count: company.contact_count || 0 })}</span>
+                  <span className="company-card-stat-value">{company.contact_count || 0}</span>
+                </div>
+                <div className="company-card-stat">
+                  <span className="company-card-stat-label">{t('companies.dealValue')}</span>
+                  <span className="company-card-stat-value" style={{ color: 'var(--success)' }}>
+                    ¥{(company.total_deal_value || 0).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+              {company.active_deal && (
+                <div className="company-card-deal">
+                  <span>💰</span>
+                  <span>{t('dashboard.activeDeal')}: <strong>{company.active_deal}</strong></span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="table-container">
+          {companies.length > 0 ? (
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>{t('companies.name')}</th>
+                  <th>{t('companies.website')}</th>
+                  <th>{t('companies.industry')}</th>
+                  <th>{t('companies.phone')}</th>
+                  <th>{t('companies.address')}</th>
+                  <th>{t('companies.notes')}</th>
+                  <th>{t('companies.contacts')}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <EmptyState message={t('companies.noCompanies')} />
-        )}
-      </div>
+              </thead>
+              <tbody>
+                {companies.map((company) => {
+                  const addressTruncated = company.address ? company.address.slice(0, 20) + (company.address.length > 20 ? '...' : '') : '-';
+                  const notesTruncated = company.notes ? company.notes.slice(0, 30) + (company.notes.length > 30 ? '...' : '') : '-';
+                  return (
+                    <tr key={company.id}>
+                      <td className="font-medium">{company.name}</td>
+                      <td>
+                        {company.website ? (
+                          <a href={company.website} target="_blank" rel="noopener noreferrer" title={company.website}>
+                            {company.website.length > 25 ? company.website.slice(0, 25) + '...' : company.website}
+                          </a>
+                        ) : '-'}
+                      </td>
+                      <td>{company.industry || '-'}</td>
+                      <td>{company.phone || '-'}</td>
+                      <td title={company.address || ''}>{addressTruncated}</td>
+                      <td title={company.notes || ''}>{notesTruncated}</td>
+                      <td>{company.contact_count || 0}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <EmptyState message={t('companies.noCompanies')} />
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -547,7 +731,7 @@ function TasksView({ tasks, onLoad, toast, t }) {
               <option value="high">{t('tasks.priorities.high')}</option>
             </select>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75ren', marginTop: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
             <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>{t('tasks.cancel')}</button>
             <button type="submit" className="btn btn-primary">{t('tasks.saveTask')}</button>
           </div>
