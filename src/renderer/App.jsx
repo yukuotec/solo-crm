@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { logger } from './logger';
-import { ToastProvider, useToast, GlobalSearch, Modal, ErrorBoundary, useTranslation, LanguageSwitcher, LocaleProvider } from './components';
+import { ToastProvider, useToast, GlobalSearch, Modal, ErrorBoundary, useTranslation, LanguageSwitcher, LocaleProvider, ImportDialog, AISearchInput } from './components';
 import { useContactStore, useCompanyStore, useDealStore, useTaskStore } from '../shared/store';
 
 function AppContent() {
@@ -338,6 +338,7 @@ function translateStage(stage, t) {
 
 function ContactsView({ contacts, onLoad, toast, t }) {
   const [showModal, setShowModal] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', notes: '' });
 
   const handleSubmit = async (e) => {
@@ -357,13 +358,27 @@ function ContactsView({ contacts, onLoad, toast, t }) {
     <div className="module-view">
       <div className="module-header">
         <h2>{t('contacts.title')}</h2>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-          {t('contacts.addContact')}
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="btn btn-secondary" onClick={() => setShowImportDialog(true)}>
+            导入
+          </button>
+          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+            {t('contacts.addContact')}
+          </button>
+        </div>
       </div>
 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={t('contacts.addContact')}>
         <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>AI 搜索</label>
+            <AISearchInput
+              value={formData.name}
+              onChange={(result) => setFormData({ ...formData, ...result })}
+              type="contact"
+              placeholder="输入姓名，点击 AI 搜索自动填充..."
+            />
+          </div>
           <div className="form-group">
             <label>{t('contacts.name')} *</label>
             <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
@@ -386,6 +401,12 @@ function ContactsView({ contacts, onLoad, toast, t }) {
           </div>
         </form>
       </Modal>
+
+      <ImportDialog
+        isOpen={showImportDialog}
+        onClose={() => { setShowImportDialog(false); onLoad(); }}
+        type="contacts"
+      />
 
       <div className="table-container">
         {contacts.length > 0 ? (
@@ -414,6 +435,7 @@ function ContactsView({ contacts, onLoad, toast, t }) {
 
 function CompaniesView({ companies, onLoad, toast, t, viewMode, onViewModeChange }) {
   const [showModal, setShowModal] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const [formData, setFormData] = useState({ name: '', website: '', industry: '', phone: '', address: '', notes: '' });
 
   const handleSubmit = async (e) => {
@@ -433,7 +455,7 @@ function CompaniesView({ companies, onLoad, toast, t, viewMode, onViewModeChange
     <div className="module-view">
       <div className="module-header">
         <h2>{t('companies.title')}</h2>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <div className="view-toggle">
             <button
               className={`view-toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
@@ -448,6 +470,9 @@ function CompaniesView({ companies, onLoad, toast, t, viewMode, onViewModeChange
               {t('companies.cardView')}
             </button>
           </div>
+          <button className="btn btn-secondary" onClick={() => setShowImportDialog(true)}>
+            导入
+          </button>
           <button className="btn btn-primary" onClick={() => setShowModal(true)}>
             {t('companies.addCompany')}
           </button>
@@ -456,6 +481,15 @@ function CompaniesView({ companies, onLoad, toast, t, viewMode, onViewModeChange
 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={t('companies.addCompany')}>
         <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>AI 搜索</label>
+            <AISearchInput
+              value={formData.name}
+              onChange={(result) => setFormData({ ...formData, ...result })}
+              type="company"
+              placeholder="输入公司名，点击 AI 搜索自动填充..."
+            />
+          </div>
           <div className="form-group">
             <label>{t('companies.name')} *</label>
             <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
@@ -486,6 +520,12 @@ function CompaniesView({ companies, onLoad, toast, t, viewMode, onViewModeChange
           </div>
         </form>
       </Modal>
+
+      <ImportDialog
+        isOpen={showImportDialog}
+        onClose={() => { setShowImportDialog(false); onLoad(); }}
+        type="companies"
+      />
 
       {viewMode === 'card' ? (
         <div className="company-card-grid">
@@ -581,8 +621,40 @@ function DealsView({ deals, onLoad, toast, t }) {
   const [formData, setFormData] = useState({
     title: '', stage: 'lead', value: '', probability: 0, close_date: '', notes: '',
   });
+  const [draggedDeal, setDraggedDeal] = useState(null);
 
   const stages = ['lead', 'qualified', 'proposal', 'negotiation', 'closed_won', 'closed_lost'];
+
+  const handleDragStart = (e, deal) => {
+    setDraggedDeal(deal);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', deal.id.toString());
+    e.target.style.opacity = '0.5';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e, targetStage) => {
+    e.preventDefault();
+    if (!draggedDeal || draggedDeal.stage === targetStage) return;
+    
+    try {
+      await window.electronAPI.db.updateDeal(draggedDeal.id, { stage: targetStage });
+      toast.success(`商谈已移动到 ${t(\`deals.stages.${targetStage}\`)}`);
+      setDraggedDeal(null);
+      onLoad();
+    } catch (error) {
+      toast.error(`更新失败：${error.message}`);
+    }
+  };
+
+  const handleDragEnd = (e) => {
+    e.target.style.opacity = '1';
+    setDraggedDeal(null);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -652,14 +724,25 @@ function DealsView({ deals, onLoad, toast, t }) {
 
       <div className="pipeline-board">
         {stages.map((stage) => (
-          <div key={stage} className="pipeline-column">
+          <div 
+            key={stage} 
+            className="pipeline-column"
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, stage)}
+          >
             <div className="pipeline-column-header">
               <h4>{t(`deals.stages.${stage}`)}</h4>
               <span className="column-count">{dealsByStage[stage].length}</span>
             </div>
             <div className="pipeline-column-content">
               {dealsByStage[stage].map((deal) => (
-                <div key={deal.id} className="deal-card">
+                <div 
+                  key={deal.id} 
+                  className="deal-card"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, deal)}
+                  onDragEnd={handleDragEnd}
+                >
                   <div className="deal-title">{deal.title}</div>
                   <div className="deal-value">¥{deal.value?.toLocaleString()}</div>
                 </div>

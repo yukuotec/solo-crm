@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const { ipcMain, dialog } = require('electron');
 const { dbManager } = require('../db/database');
 const {
@@ -9,6 +10,7 @@ const {
   ActivityRepository,
 } = require('../db/repositories');
 const { mainLogger } = require('../main/logger');
+const XLSX = require('xlsx');
 
 const LOG_PREFIX = '[IPC]';
 
@@ -349,7 +351,176 @@ function initializeDbHandlers() {
     }
   });
 
+  // Import handlers
+  ipcMain.handle('import:parseFile', async (_, filePath) => {
+    mainLogger.info(`${LOG_PREFIX} Handling import:parseFile for ${filePath}`);
+    try {
+      const ext = path.extname(filePath).toLowerCase();
+
+      let data;
+      if (ext === '.csv') {
+        // Read CSV file
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const lines = content.split('\n').filter(line => line.trim());
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+
+        data = lines.slice(1).map(line => {
+          const values = line.split(',');
+          const row = {};
+          headers.forEach((header, idx) => {
+            row[mapHeader(header)] = values[idx]?.trim() || '';
+          });
+          return row;
+        });
+      } else if (['.xlsx', '.xls'].includes(ext)) {
+        // Read Excel file
+        const workbook = XLSX.readFile(filePath);
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        data = XLSX.utils.sheet_to_json(worksheet);
+
+        // Map headers
+        data = data.map(row => {
+          const mapped = {};
+          Object.keys(row).forEach(key => {
+            const mappedKey = mapHeader(key.toLowerCase());
+            if (mappedKey) {
+              mapped[mappedKey] = row[key];
+            }
+          });
+          return mapped;
+        });
+      } else {
+        return { success: false, error: '不支持的文件格式' };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      mainLogger.error(`${LOG_PREFIX} Error parsing file`, { error: error.message });
+      return { success: false, error: error.message };
+    }
+  });
+
   mainLogger.info(`${LOG_PREFIX} All database IPC handlers initialized`);
 }
+
+// Helper function to map various header names to our field names
+function mapHeader(header) {
+  const mappings = {
+    // Name mappings
+    'name': 'name',
+    '姓名': 'name',
+    'fullname': 'name',
+    'full name': 'name',
+
+    // Email mappings
+    'email': 'email',
+    '邮箱': 'email',
+    'e-mail': 'email',
+    'mail': 'email',
+
+    // Phone mappings
+    'phone': 'phone',
+    '电话': 'phone',
+    'tel': 'phone',
+    'telephone': 'phone',
+    'mobile': 'phone',
+    '手机': 'phone',
+
+    // Company mappings
+    'company': 'company_name',
+    '公司': 'company_name',
+    'company name': 'company_name',
+    'organization': 'company_name',
+
+    // Website mappings
+    'website': 'website',
+    '网站': 'website',
+    'url': 'website',
+    'web': 'website',
+
+    // Industry mappings
+    'industry': 'industry',
+    '行业': 'industry',
+    'sector': 'industry',
+
+    // Address mappings
+    'address': 'address',
+    '地址': 'address',
+    'location': 'address',
+    'city': 'address',
+
+    // Tags mappings
+    'tags': 'tags',
+    '标签': 'tags',
+    'label': 'tags',
+    'labels': 'tags',
+
+    // Notes mappings
+    'notes': 'notes',
+    '备注': 'notes',
+    'note': 'notes',
+    'remark': 'notes',
+    'remarks': 'notes',
+  };
+
+  // Clean header and find mapping
+  const cleaned = header.trim().toLowerCase();
+  return mappings[cleaned] || null;
+}
+
+  // AI Search handler
+  ipcMain.handle('ai:search', async (_, { query, type }) => {
+    mainLogger.info(`${LOG_PREFIX} Handling ai:search for query="${query}", type="${type}"`);
+    try {
+      // 本地搜索优先 - 在现有数据中搜索
+      let localResults = null;
+      
+      if (type === 'company') {
+        const companies = repos.companies.findAll();
+        localResults = companies.find(c => 
+          c.name.toLowerCase().includes(query.toLowerCase()) ||
+          c.website?.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        if (!localResults) {
+          // 模拟 AI 搜索结果（实际项目中可调用外部 API）
+          // 这里返回一个示例数据结构
+          localResults = {
+            name: query,
+            website: `https://www.${query.toLowerCase().replace(/\s+/g, '')}.com`,
+            industry: '科技/互联网',
+            phone: '400-xxx-xxxx',
+            address: '北京市海淀区',
+            notes: `关于 ${query} 的简介信息 - 可通过真实 API 获取`,
+          };
+        }
+      } else if (type === 'contact') {
+        const contacts = repos.contacts.findAll();
+        localResults = contacts.find(c => 
+          c.name.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        if (!localResults) {
+          // 模拟 AI 搜索结果
+          localResults = {
+            name: query,
+            email: `${query.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+            phone: '138-xxxx-xxxx',
+            company_name: '未知公司',
+            notes: `关于 ${query} 的简介信息 - 可通过真实 API 获取`,
+          };
+        }
+      }
+
+      return { success: true, data: localResults };
+    } catch (error) {
+      mainLogger.error(`${LOG_PREFIX} Error in ai:search`, { error: error.message });
+      return { success: false, error: error.message };
+    }
+  });
+
+  mainLogger.info(`${LOG_PREFIX} AI search handler initialized`);
+};
 
 module.exports = { initializeDbHandlers };

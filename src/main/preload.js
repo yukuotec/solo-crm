@@ -50,4 +50,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // File system operations
   saveFile: (filePath, content) => ipcRenderer.invoke('file:save', filePath, content),
   showSaveDialog: (defaultPath) => ipcRenderer.invoke('file:saveDialog', defaultPath),
+
+  // Import operations
+  import: {
+    parseFile: (filePath) => ipcRenderer.invoke('import:parseFile', filePath),
+  },
+
+  // AI operations
+  ai: {
+    search: ({ query, type }) => ipcRenderer.invoke('ai:search', { query, type }),
+  },
 });

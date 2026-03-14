@@ -1590,3 +1590,233 @@ body {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+
+/* Import Dialog */
+.import-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.import-file-select {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.import-instruction {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.import-upload-area {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.import-upload-area input[type="file"] {
+  display: none;
+}
+
+.upload-btn {
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.upload-btn:hover {
+  background: var(--accent-hover);
+}
+
+.upload-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.file-name {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.import-preview-table {
+  max-height: 300px;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.import-preview-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.import-preview-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-tertiary);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+}
+
+.import-preview-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.import-preview-table tr:last-child td {
+  border-bottom: none;
+}
+
+.preview-note {
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  background: var(--bg-tertiary);
+}
+
+.import-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+}
+
+.import-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.import-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+/* AI Search Input */
+.ai-search-input {
+  position: relative;
+}
+
+.ai-search-box {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ai-search-field {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.ai-search-field:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.ai-search-btn {
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.ai-search-btn:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.ai-search-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ai-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.ai-search-result-item {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.ai-search-result-item:last-child {
+  border-bottom: none;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.result-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.result-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.result-row {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.result-label {
+  color: var(--text-secondary);
+  min-width: 3rem;
+}
+
+.result-value {
+  color: var(--text-primary);
+}

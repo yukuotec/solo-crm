@@ -3,7 +3,7 @@ import { Modal } from './Modal';
 import { useToast } from './Toast';
 import { useTranslation } from '../i18n';
 
-export function ContactDetail({ contact, onClose, onDelete }) {
+export function ContactDetail({ contact, onClose, onDelete, onCompanyClick }) {
   const toast = useToast();
   const { t } = useTranslation();
   const [relatedData, setRelatedData] = useState({ deals: [], tasks: [], activities: [] });
@@ -46,7 +46,13 @@ export function ContactDetail({ contact, onClose, onDelete }) {
             </div>
             <div className="detail-item">
               <span className="detail-label">Company</span>
-              <span className="detail-value">{contact.company_name || '-'}</span>
+              <span className="detail-value">
+                {contact.company_id && contact.company_name ? (
+                  <a href="#" onClick={(e) => { e.preventDefault(); onCompanyClick && onCompanyClick(contact.company_id); }}>
+                    {contact.company_name}
+                  </a>
+                ) : (contact.company_name || '-')}
+              </span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Tags</span>
@@ -70,7 +76,7 @@ export function ContactDetail({ contact, onClose, onDelete }) {
                   {relatedData.deals.map(deal => (
                     <div key={deal.id} className="related-item">
                       <span className="related-name">{deal.title}</span>
-                      <span className="related-meta">${deal.value?.toLocaleString()} • {deal.stage}</span>
+                      <span className="related-meta">¥{deal.value?.toLocaleString()} • {deal.stage}</span>
                     </div>
                   ))}
                 </div>
@@ -124,7 +130,7 @@ export function ContactDetail({ contact, onClose, onDelete }) {
   );
 }
 
-export function CompanyDetail({ company, onClose, onDelete }) {
+export function CompanyDetail({ company, onClose, onDelete, onContactClick }) {
   const toast = useToast();
   const { t } = useTranslation();
   const [relatedData, setRelatedData] = useState({ contacts: [], deals: [], activities: [] });
@@ -195,9 +201,9 @@ export function CompanyDetail({ company, onClose, onDelete }) {
               {relatedData.contacts.length > 0 ? (
                 <div className="related-list">
                   {relatedData.contacts.map(contact => (
-                    <div key={contact.id} className="related-item">
+                    <div key={contact.id} className="related-item" style={{ cursor: 'pointer' }} onClick={() => onContactClick && onContactClick(contact.id)}>
                       <span className="related-name">{contact.name}</span>
-                      <span className="related-meta">{contact.email}</span>
+                      <span className="related-meta">{contact.email || contact.phone || '-'}</span>
                     </div>
                   ))}
                 </div>
@@ -213,7 +219,7 @@ export function CompanyDetail({ company, onClose, onDelete }) {
                   {relatedData.deals.map(deal => (
                     <div key={deal.id} className="related-item">
                       <span className="related-name">{deal.title}</span>
-                      <span className="related-meta">${deal.value?.toLocaleString()} • {deal.stage}</span>
+                      <span className="related-meta">¥{deal.value?.toLocaleString()} • {deal.stage}</span>
                     </div>
                   ))}
                 </div>
@@ -250,7 +256,7 @@ export function CompanyDetail({ company, onClose, onDelete }) {
   );
 }
 
-export function DealDetail({ deal, onClose, onDelete }) {
+export function DealDetail({ deal, onClose, onDelete, onCompanyClick, onContactClick }) {
   const [activities, setActivities] = useState([]);
 
   useEffect(() => {
@@ -272,7 +278,7 @@ export function DealDetail({ deal, onClose, onDelete }) {
           <div className="detail-grid">
             <div className="detail-item">
               <span className="detail-label">Value</span>
-              <span className="detail-value">${deal.value?.toLocaleString()}</span>
+              <span className="detail-value">¥{deal.value?.toLocaleString()}</span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Stage</span>
@@ -284,7 +290,7 @@ export function DealDetail({ deal, onClose, onDelete }) {
             </div>
             <div className="detail-item">
               <span className="detail-label">Weighted Value</span>
-              <span className="detail-value">${(deal.value * deal.probability / 100)?.toLocaleString()}</span>
+              <span className="detail-value">¥{(deal.value * deal.probability / 100)?.toLocaleString()}</span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Close Date</span>
@@ -292,11 +298,23 @@ export function DealDetail({ deal, onClose, onDelete }) {
             </div>
             <div className="detail-item">
               <span className="detail-label">Contact</span>
-              <span className="detail-value">{deal.contact_name || '-'}</span>
+              <span className="detail-value">
+                {deal.contact_id && deal.contact_name ? (
+                  <a href="#" onClick={(e) => { e.preventDefault(); onContactClick && onContactClick(deal.contact_id); }}>
+                    {deal.contact_name}
+                  </a>
+                ) : (deal.contact_name || '-')}
+              </span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Company</span>
-              <span className="detail-value">{deal.company_name || '-'}</span>
+              <span className="detail-value">
+                {deal.company_id && deal.company_name ? (
+                  <a href="#" onClick={(e) => { e.preventDefault(); onCompanyClick && onCompanyClick(deal.company_id); }}>
+                    {deal.company_name}
+                  </a>
+                ) : (deal.company_name || '-')}
+              </span>
             </div>
           </div>
           {deal.notes && (
