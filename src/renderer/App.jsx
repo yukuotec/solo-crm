@@ -83,6 +83,7 @@ function AppContent() {
             upcomingTasks={upcomingTasks}
             totalPipelineValue={totalPipelineValue}
             deals={deals}
+            activities={activities}
             t={t}
           />
         )}
@@ -172,7 +173,7 @@ function Sidebar({ activeTab, setActiveTab, stats, appInfo, t }) {
   );
 }
 
-function Dashboard({ stats, pipelineSummary, upcomingTasks, totalPipelineValue, deals, t }) {
+function Dashboard({ stats, pipelineSummary, upcomingTasks, totalPipelineValue, deals, activities, t }) {
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
 
@@ -310,6 +311,29 @@ function Dashboard({ stats, pipelineSummary, upcomingTasks, totalPipelineValue, 
             </div>
           ) : (
             <EmptyState message={t('dashboard.noUpcomingTasks')} />
+          )}
+        </div>
+
+        <div className="dashboard-card">
+          <h3>{t('dashboard.recentActivities')}</h3>
+          {activities && activities.length > 0 ? (
+            <div className="recent-activities">
+              {activities.slice(0, 5).map((activity) => {
+                const typeIcons = { call: '📞', meeting: '🤝', email: '📧', note: '📝', other: '📌' };
+                return (
+                  <div key={activity.id} className="activity-item">
+                    <span className="activity-icon">{typeIcons[activity.type] || '📌'}</span>
+                    <div className="activity-content">
+                      <span className="activity-type">{t(`activities.types.${activity.type}`)}</span>
+                      <span className="activity-date">{new Date(activity.date).toLocaleDateString()}</span>
+                      {activity.notes && <p className="activity-notes">{activity.notes.slice(0, 50)}{activity.notes.length > 50 ? '...' : ''}</p>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <EmptyState message={t('dashboard.noActivities')} />
           )}
         </div>
       </div>
