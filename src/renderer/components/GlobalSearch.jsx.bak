@@ -1,42 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const SEARCH_HISTORY_KEY = 'solo-crm-search-history';
-const MAX_HISTORY = 10;
-
-function getSearchHistory() {
-  try {
-    const stored = localStorage.getItem(SEARCH_HISTORY_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveToHistory(query) {
-  try {
-    const history = getSearchHistory().filter(h => h !== query);
-    history.unshift(query);
-    if (history.length > MAX_HISTORY) history.pop();
-    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
-  } catch {
-    // Ignore localStorage errors
-  }
-}
-
-function clearSearchHistory() {
-  try {
-    localStorage.removeItem(SEARCH_HISTORY_KEY);
-  } catch {
-    // Ignore localStorage errors
-  }
-}
-
 export function GlobalSearch() {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState({ contacts: [], companies: [], deals: [] });
   const [loading, setLoading] = useState(false);
-  const [searchHistory, setSearchHistory] = useState([]);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -52,36 +20,10 @@ export function GlobalSearch() {
   }, []);
 
   useEffect(() => {
-    if (isOpen) {
-      setSearchHistory(getSearchHistory());
-      inputRef.current?.focus();
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    const addToHistory = () => {
-      if (query.trim() && !loading) {
-        saveToHistory(query.trim());
-        setSearchHistory(getSearchHistory());
-      }
-    };
-    const handleEnter = (e) => {
-      if (e.key === 'Enter' && query.trim()) {
-        addToHistory();
-      }
-    };
-    document.addEventListener('keydown', handleEnter);
-    return () => document.removeEventListener('keydown', handleEnter);
-  }, [query, loading]);
-
-  const handleClearHistory = () => {
-    clearSearchHistory();
-    setSearchHistory([]);
-  };
-
-  const handleHistoryClick = (term) => {
-    setQuery(term);
-  };
 
   useEffect(() => {
     const search = async () => {
@@ -128,7 +70,7 @@ export function GlobalSearch() {
     <>
       <button className="global-search-trigger" onClick={() => setIsOpen(true)}>
         <span className="search-icon">🔍</span>
-        <span className="search-text">搜索</span>
+        <span className="search-text">Search</span>
         <kbd className="search-shortcut">⌘K</kbd>
       </button>
 
@@ -141,7 +83,7 @@ export function GlobalSearch() {
                 ref={inputRef}
                 type="text"
                 className="search-input"
-                placeholder="搜索联系人、公司、商谈..."
+                placeholder="Search contacts, companies, deals..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
@@ -149,38 +91,21 @@ export function GlobalSearch() {
             </div>
 
             <div className="search-results">
-              {loading && <div className="search-loading">搜索中...</div>}
+              {loading && <div className="search-loading">Searching...</div>}
 
               {!loading && query && totalResults === 0 && (
-                <div className="search-empty">未找到匹配 "{query}" 的结果</div>
+                <div className="search-empty">No results found for "{query}"</div>
               )}
 
               {!loading && !query && (
                 <div className="search-hint">
-                  {searchHistory.length > 0 ? (
-                    <div className="search-history">
-                      <div className="search-history-header">
-                        <span>最近搜索</span>
-                        <button className="btn btn-sm btn-text" onClick={handleClearHistory}>清空</button>
-                      </div>
-                      <div className="search-history-list">
-                        {searchHistory.map((term, idx) => (
-                          <button key={idx} className="search-history-item" onClick={() => handleHistoryClick(term)}>
-                            <span className="history-icon">🕐</span>
-                            <span>{term}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <p>输入关键词搜索联系人、公司、商谈...</p>
-                  )}
+                  <p>Type to search across contacts, companies, and deals</p>
                 </div>
               )}
 
               {!loading && results.contacts.length > 0 && (
                 <div className="search-section">
-                  <div className="search-section-title">联系人</div>
+                  <div className="search-section-title">Contacts</div>
                   {results.contacts.map((contact) => (
                     <div key={contact.id} className="search-result-item">
                       <span className="result-icon">👤</span>
@@ -195,7 +120,7 @@ export function GlobalSearch() {
 
               {!loading && results.companies.length > 0 && (
                 <div className="search-section">
-                  <div className="search-section-title">公司</div>
+                  <div className="search-section-title">Companies</div>
                   {results.companies.map((company) => (
                     <div key={company.id} className="search-result-item">
                       <span className="result-icon">🏢</span>
@@ -210,14 +135,14 @@ export function GlobalSearch() {
 
               {!loading && results.deals.length > 0 && (
                 <div className="search-section">
-                  <div className="search-section-title">商谈</div>
+                  <div className="search-section-title">Deals</div>
                   {results.deals.map((deal) => (
                     <div key={deal.id} className="search-result-item">
                       <span className="result-icon">💰</span>
                       <div className="result-info">
                         <span className="result-name">{deal.title}</span>
                         <span className="result-meta">
-                          ¥{deal.value?.toLocaleString()} • {deal.stage}
+                          ${deal.value?.toLocaleString()} • {deal.stage}
                         </span>
                       </div>
                     </div>
