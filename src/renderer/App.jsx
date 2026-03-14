@@ -111,7 +111,7 @@ function AppContent() {
           <TasksView tasks={tasks} onLoad={loadTasks} toast={toast} t={t} />
         )}
         {activeTab === 'activities' && (
-          <ActivitiesView activities={activities} onLoad={loadActivities} toast={toast} t={t} />
+          <ActivitiesView activities={activities} onLoad={loadActivities} toast={toast} t={t} contacts={contacts} deals={deals} />
         )}
       </main>
     </div>
@@ -967,7 +967,7 @@ function TasksView({ tasks, onLoad, toast, t }) {
   );
 }
 
-function ActivitiesView({ activities, onLoad, toast, t }) {
+function ActivitiesView({ activities, onLoad, toast, t, contacts, deals }) {
   const [showModal, setShowModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [activityToDelete, setActivityToDelete] = useState(null);
@@ -1038,6 +1038,24 @@ function ActivitiesView({ activities, onLoad, toast, t }) {
               <option value="email">{t('activities.types.email')}</option>
               <option value="note">{t('activities.types.note')}</option>
               <option value="other">{t('activities.types.other')}</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>{t('activities.contact')}</label>
+            <select value={formData.contact_id} onChange={(e) => setFormData({ ...formData, contact_id: e.target.value })}>
+              <option value="">无</option>
+              {contacts.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>{t('activities.deal')}</label>
+            <select value={formData.deal_id} onChange={(e) => setFormData({ ...formData, deal_id: e.target.value })}>
+              <option value="">无</option>
+              {deals.map(d => (
+                <option key={d.id} value={d.id}>{d.title}</option>
+              ))}
             </select>
           </div>
           <div className="form-group">
