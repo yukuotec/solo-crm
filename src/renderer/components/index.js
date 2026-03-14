@@ -8,3 +8,4 @@ export { LocaleProvider, useLocale, useTranslation } from '../i18n';
 export { LanguageSwitcher } from './LanguageSwitcher';
 export { ImportDialog } from './ImportDialog';
 export { AISearchInput } from './AISearchInput';
+export { ActivityList } from './ActivityList';
