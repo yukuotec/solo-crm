@@ -19,6 +19,7 @@ export const translations = {
       companies: '公司',
       deals: '销售机会',
       tasks: '任务',
+      activities: '活动记录',
     },
 
     // 仪表盘
@@ -177,6 +178,36 @@ export const translations = {
       due: '到期',
     },
 
+    // 活动记录
+    activities: {
+      title: '活动记录',
+      addActivity: '+ 记录活动',
+      editActivity: '编辑活动',
+      deleteActivity: '删除活动',
+      saveActivity: '保存活动',
+      cancel: '取消',
+      types: {
+        title: '活动类型',
+        call: '通话',
+        meeting: '会议',
+        email: '邮件',
+        note: '备注',
+        other: '其他',
+      },
+      date: '日期',
+      notes: '备注',
+      contact: '联系人',
+      deal: '商谈',
+      noActivities: '暂无活动记录，添加第一条记录吧！',
+      confirmDelete: '确定要删除此活动记录吗？',
+      createdSuccess: '活动记录成功',
+      updatedSuccess: '活动更新成功',
+      deletedSuccess: '活动删除成功',
+      createFailed: '创建失败',
+      updateFailed: '更新失败',
+      deleteFailed: '删除失败',
+    },
+
     // 通用按钮和操作
     buttons: {
       add: '新增',
@@ -264,6 +295,12 @@ export const translations = {
       deleteTitle: '确认删除',
       deleteMessage: '此操作不可恢复，确定要继续吗？',
     },
+
+    // 确认模态框
+    confirmModal: {
+      title: '确认',
+      deleteTitle: '确认删除',
+    },
   },
 
   en: {
@@ -281,6 +318,7 @@ export const translations = {
       companies: 'Companies',
       deals: 'Deals',
       tasks: 'Tasks',
+      activities: 'Activities',
     },
 
     // Dashboard
@@ -439,6 +477,36 @@ export const translations = {
       due: 'Due',
     },
 
+    // Activities
+    activities: {
+      title: 'Activities',
+      addActivity: '+ Log Activity',
+      editActivity: 'Edit Activity',
+      deleteActivity: 'Delete Activity',
+      saveActivity: 'Save Activity',
+      cancel: 'Cancel',
+      types: {
+        title: 'Activity Type',
+        call: 'Call',
+        meeting: 'Meeting',
+        email: 'Email',
+        note: 'Note',
+        other: 'Other',
+      },
+      date: 'Date',
+      notes: 'Notes',
+      contact: 'Contact',
+      deal: 'Deal',
+      noActivities: 'No activities yet. Log your first activity!',
+      confirmDelete: 'Are you sure you want to delete this activity?',
+      createdSuccess: 'Activity logged successfully',
+      updatedSuccess: 'Activity updated successfully',
+      deletedSuccess: 'Activity deleted successfully',
+      createFailed: 'Failed to log activity',
+      updateFailed: 'Failed to update activity',
+      deleteFailed: 'Failed to delete activity',
+    },
+
     // Buttons
     buttons: {
       add: 'Add',
@@ -525,6 +593,12 @@ export const translations = {
       title: 'Confirm',
       deleteTitle: 'Confirm Delete',
       deleteMessage: 'This action cannot be undone. Are you sure?',
+    },
+
+    // Confirm Modal
+    confirmModal: {
+      title: 'Confirm',
+      deleteTitle: 'Confirm Delete',
     },
   },
 };
