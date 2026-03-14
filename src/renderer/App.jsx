@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { logger } from './logger';
-import { ToastProvider, useToast, GlobalSearch, Modal, ErrorBoundary, useTranslation, LanguageSwitcher, LocaleProvider, ImportDialog, AISearchInput } from './components';
-import { useContactStore, useCompanyStore, useDealStore, useTaskStore } from '../shared/store';
+import { ToastProvider, useToast, GlobalSearch, Modal, ErrorBoundary, useTranslation, LanguageSwitcher, LocaleProvider, ImportDialog, AISearchInput, ActivityList, ConfirmModal } from './components';
+import { useContactStore, useCompanyStore, useDealStore, useTaskStore, useActivityStore } from '../shared/store';
 
 function AppContent() {
   const { t } = useTranslation();
@@ -15,6 +15,7 @@ function AppContent() {
   const { companies, loadCompanies, createCompany: storeCreateCompany } = useCompanyStore();
   const { deals, loadDeals, loadPipelineSummary, pipelineSummary } = useDealStore();
   const { tasks, loadTasks, upcomingTasks, loadUpcomingTasks } = useTaskStore();
+  const { activities, loadActivities, createActivity, deleteActivity } = useActivityStore();
 
   useEffect(() => {
     logger.info('App mounted, fetching app info...');
@@ -36,6 +37,7 @@ function AppContent() {
     loadPipelineSummary();
     loadTasks();
     loadUpcomingTasks(7);
+    loadActivities();
   }, []);
 
   if (error) {
@@ -107,6 +109,9 @@ function AppContent() {
         {activeTab === 'tasks' && (
           <TasksView tasks={tasks} onLoad={loadTasks} toast={toast} t={t} />
         )}
+        {activeTab === 'activities' && (
+          <ActivitiesView activities={activities} onLoad={loadActivities} toast={toast} t={t} />
+        )}
       </main>
     </div>
   );
@@ -131,6 +136,7 @@ function Sidebar({ activeTab, setActiveTab, stats, appInfo, t }) {
     { id: 'companies', label: t('nav.companies'), icon: '🏢' },
     { id: 'deals', label: t('nav.deals'), icon: '💰' },
     { id: 'tasks', label: t('nav.tasks'), icon: '✅' },
+    { id: 'activities', label: t('nav.activities'), icon: '📋' },
   ];
 
   return (
@@ -843,6 +849,122 @@ function TasksView({ tasks, onLoad, toast, t }) {
           <EmptyState message={t('tasks.noTasks')} />
         )}
       </div>
+    </div>
+  );
+}
+
+function ActivitiesView({ activities, onLoad, toast, t }) {
+  const [showModal, setShowModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [activityToDelete, setActivityToDelete] = useState(null);
+  const [formData, setFormData] = useState({
+    type: 'note',
+    date: new Date().toISOString().slice(0, 16),
+    contact_id: '',
+    deal_id: '',
+    notes: '',
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await window.electronAPI.db.createActivity({
+        ...formData,
+        contact_id: formData.contact_id || null,
+        deal_id: formData.deal_id || null,
+      });
+      toast.success(t('activities.createdSuccess'));
+      setFormData({
+        type: 'note',
+        date: new Date().toISOString().slice(0, 16),
+        contact_id: '',
+        deal_id: '',
+        notes: '',
+      });
+      setShowModal(false);
+      onLoad();
+    } catch (error) {
+      toast.error(`${t('activities.createFailed')}: ${error.message}`);
+    }
+  };
+
+  const handleDelete = (activity) => {
+    setActivityToDelete(activity);
+    setShowConfirmModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await window.electronAPI.db.deleteActivity(activityToDelete.id);
+      toast.success(t('activities.deletedSuccess'));
+      setShowConfirmModal(false);
+      setActivityToDelete(null);
+      onLoad();
+    } catch (error) {
+      toast.error(`${t('activities.deleteFailed')}: ${error.message}`);
+    }
+  };
+
+  return (
+    <div className="module-view">
+      <div className="module-header">
+        <h2>{t('activities.title')}</h2>
+        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+          {t('activities.addActivity')}
+        </button>
+      </div>
+
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={t('activities.addActivity')}>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>{t('activities.types.title')}</label>
+            <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })}>
+              <option value="call">{t('activities.types.call')}</option>
+              <option value="meeting">{t('activities.types.meeting')}</option>
+              <option value="email">{t('activities.types.email')}</option>
+              <option value="note">{t('activities.types.note')}</option>
+              <option value="other">{t('activities.types.other')}</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>{t('activities.date')}</label>
+            <input
+              type="datetime-local"
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>{t('activities.notes')}</label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              rows={4}
+            />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
+            <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
+              {t('activities.cancel')}
+            </button>
+            <button type="submit" className="btn btn-primary">
+              {t('activities.save')}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        title={t('confirmModal.deleteTitle')}
+        message={t('activities.confirmDelete')}
+        confirmText={t('buttons.delete')}
+        cancelText={t('buttons.cancel')}
+        onConfirm={confirmDelete}
+        onCancel={() => setShowConfirmModal(false)}
+      />
+
+      <ActivityList activities={activities} onDelete={handleDelete} />
     </div>
   );
 }
