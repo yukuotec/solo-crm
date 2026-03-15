@@ -53,15 +53,23 @@ export function DataTable({ columns, data, sortable = true, paginate = true, pag
             </tr>
           </thead>
           <tbody>
-            {paginatedData.map((row, idx) => (
-              <tr key={row.id || idx}>
-                {columns.map(col => (
-                  <td key={col.key}>
-                    {col.render ? col.render(row) : row[col.key]}
-                  </td>
-                ))}
+            {paginatedData.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="empty-state">
+                  暂无数据
+                </td>
               </tr>
-            ))}
+            ) : (
+              paginatedData.map((row, idx) => (
+                <tr key={row.id || idx}>
+                  {columns.map(col => (
+                    <td key={col.key}>
+                      {col.render ? col.render(row) : row[col.key]}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

@@ -21,6 +21,7 @@ module.exports = {
     '^src/renderer/i18n/LocaleProvider$': '<rootDir>/src/renderer/i18n/LocaleProvider.jsx',
     '^src/renderer/components/Toast$': '<rootDir>/src/renderer/components/Toast.jsx',
     '^src/renderer/components/Modal$': '<rootDir>/src/renderer/components/Modal.jsx',
+    '^src/renderer/components/DataTable$': '<rootDir>/src/renderer/components/DataTable.jsx',
     '^src/shared/store$': '<rootDir>/src/shared/store.js',
     '^src/renderer/logger$': '<rootDir>/src/renderer/logger.js',
   },
