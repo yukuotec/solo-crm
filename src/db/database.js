@@ -148,12 +148,16 @@ class DatabaseManager {
           -- Indexes for better search performance
           CREATE INDEX IF NOT EXISTS idx_contacts_name ON contacts(name);
           CREATE INDEX IF NOT EXISTS idx_contacts_email ON contacts(email);
+          CREATE INDEX IF NOT EXISTS idx_contacts_company ON contacts(company_id);
           CREATE INDEX IF NOT EXISTS idx_companies_name ON companies(name);
           CREATE INDEX IF NOT EXISTS idx_deals_stage ON deals(stage);
+          CREATE INDEX IF NOT EXISTS idx_deals_contact ON deals(contact_id);
+          CREATE INDEX IF NOT EXISTS idx_deals_company ON deals(company_id);
           CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
           CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date);
           CREATE INDEX IF NOT EXISTS idx_activities_date ON activities(date);
           CREATE INDEX IF NOT EXISTS idx_activities_contact ON activities(contact_id);
+          CREATE INDEX IF NOT EXISTS idx_activities_deal ON activities(deal_id);
         `,
       },
     ];
