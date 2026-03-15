@@ -89,7 +89,7 @@ function AppContent() {
         )}
 
         {activeTab === 'contacts' && (
-          <ContactsView contacts={contacts} onLoad={loadContacts} toast={toast} t={t} />
+          <ContactsView contacts={contacts} companies={companies} onLoad={loadContacts} toast={toast} t={t} />
         )}
 
         {activeTab === 'companies' && (
@@ -104,11 +104,11 @@ function AppContent() {
         )}
 
         {activeTab === 'deals' && (
-          <DealsView deals={deals} onLoad={loadDeals} toast={toast} t={t} />
+          <DealsView deals={deals} contacts={contacts} companies={companies} onLoad={loadDeals} toast={toast} t={t} />
         )}
 
         {activeTab === 'tasks' && (
-          <TasksView tasks={tasks} onLoad={loadTasks} toast={toast} t={t} />
+          <TasksView tasks={tasks} contacts={contacts} deals={deals} onLoad={loadTasks} toast={toast} t={t} />
         )}
         {activeTab === 'activities' && (
           <ActivitiesView activities={activities} onLoad={loadActivities} toast={toast} t={t} contacts={contacts} deals={deals} />
@@ -366,12 +366,12 @@ function translateStage(stage, t) {
   return key ? t(key) : stage.replace('_', ' ');
 }
 
-function ContactsView({ contacts, onLoad, toast, t }) {
+function ContactsView({ contacts, companies, onLoad, toast, t }) {
   const [showModal, setShowModal] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [contactToDelete, setContactToDelete] = useState(null);
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', notes: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', company_id: '', notes: '' });
 
   const handleDelete = (contact) => {
     setContactToDelete(contact);
@@ -393,9 +393,12 @@ function ContactsView({ contacts, onLoad, toast, t }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await window.electronAPI.db.createContact(formData);
+      await window.electronAPI.db.createContact({
+        ...formData,
+        company_id: formData.company_id || null,
+      });
       toast.success(t('contacts.createdSuccess'));
-      setFormData({ name: '', email: '', phone: '', notes: '' });
+      setFormData({ name: '', email: '', phone: '', company_id: '', notes: '' });
       setShowModal(false);
       onLoad();
     } catch (error) {
@@ -439,6 +442,15 @@ function ContactsView({ contacts, onLoad, toast, t }) {
           <div className="form-group">
             <label>{t('contacts.phone')}</label>
             <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+          </div>
+          <div className="form-group">
+            <label>{t('contacts.company')}</label>
+            <select value={formData.company_id} onChange={(e) => setFormData({ ...formData, company_id: e.target.value })}>
+              <option value="">-- {t('contacts.selectCompany')} --</option>
+              {companies.map((company) => (
+                <option key={company.id} value={company.id}>{company.name}</option>
+              ))}
+            </select>
           </div>
           <div className="form-group">
             <label>{t('contacts.notes')}</label>
@@ -673,12 +685,13 @@ function CompaniesView({ companies, onLoad, toast, t, viewMode, onViewModeChange
   );
 }
 
-function DealsView({ deals, onLoad, toast, t }) {
+function DealsView({ deals, contacts, companies, onLoad, toast, t }) {
   const [showModal, setShowModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [dealToDelete, setDealToDelete] = useState(null);
   const [formData, setFormData] = useState({
     title: '', stage: 'lead', value: '', probability: 0, close_date: '', notes: '',
+    contact_id: '', company_id: '',
   });
   const [draggedDeal, setDraggedDeal] = useState(null);
 
@@ -739,11 +752,11 @@ function DealsView({ deals, onLoad, toast, t }) {
         ...formData,
         value: parseFloat(formData.value) || 0,
         probability: parseInt(formData.probability) || 0,
-        contact_id: null,
-        company_id: null,
+        contact_id: formData.contact_id || null,
+        company_id: formData.company_id || null,
       });
       toast.success(t('deals.createdSuccess'));
-      setFormData({ title: '', stage: 'lead', value: '', probability: 0, close_date: '', notes: '' });
+      setFormData({ title: '', stage: 'lead', value: '', probability: 0, close_date: '', notes: '', contact_id: '', company_id: '' });
       setShowModal(false);
       onLoad();
     } catch (error) {
@@ -786,6 +799,24 @@ function DealsView({ deals, onLoad, toast, t }) {
           <div className="form-group">
             <label>{t('deals.closeDate')}</label>
             <input type="date" value={formData.close_date} onChange={(e) => setFormData({ ...formData, close_date: e.target.value })} />
+          </div>
+          <div className="form-group">
+            <label>{t('deals.company')}</label>
+            <select value={formData.company_id} onChange={(e) => setFormData({ ...formData, company_id: e.target.value })}>
+              <option value="">-- {t('deals.selectCompany')} --</option>
+              {companies.map((company) => (
+                <option key={company.id} value={company.id}>{company.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>{t('deals.contact')}</label>
+            <select value={formData.contact_id} onChange={(e) => setFormData({ ...formData, contact_id: e.target.value })}>
+              <option value="">-- {t('deals.selectContact')} --</option>
+              {contacts.map((contact) => (
+                <option key={contact.id} value={contact.id}>{contact.name}</option>
+              ))}
+            </select>
           </div>
           <div className="form-group">
             <label>{t('deals.notes')}</label>
@@ -842,12 +873,13 @@ function DealsView({ deals, onLoad, toast, t }) {
   );
 }
 
-function TasksView({ tasks, onLoad, toast, t }) {
+function TasksView({ tasks, contacts, deals, onLoad, toast, t }) {
   const [showModal, setShowModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [formData, setFormData] = useState({
     title: '', description: '', due_date: '', priority: 'medium', status: 'pending',
+    contact_id: '', deal_id: '',
   });
 
   const handleDelete = (task) => {
@@ -870,9 +902,13 @@ function TasksView({ tasks, onLoad, toast, t }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await window.electronAPI.db.createTask(formData);
+      await window.electronAPI.db.createTask({
+        ...formData,
+        contact_id: formData.contact_id || null,
+        deal_id: formData.deal_id || null,
+      });
       toast.success(t('tasks.createdSuccess'));
-      setFormData({ title: '', description: '', due_date: '', priority: 'medium', status: 'pending' });
+      setFormData({ title: '', description: '', due_date: '', priority: 'medium', status: 'pending', contact_id: '', deal_id: '' });
       setShowModal(false);
       onLoad();
     } catch (error) {
@@ -918,6 +954,24 @@ function TasksView({ tasks, onLoad, toast, t }) {
               <option value="low">{t('tasks.priorities.low')}</option>
               <option value="medium">{t('tasks.priorities.medium')}</option>
               <option value="high">{t('tasks.priorities.high')}</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>{t('tasks.contact')}</label>
+            <select value={formData.contact_id} onChange={(e) => setFormData({ ...formData, contact_id: e.target.value })}>
+              <option value="">-- {t('tasks.selectContact')} --</option>
+              {contacts.map((contact) => (
+                <option key={contact.id} value={contact.id}>{contact.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>{t('tasks.deal')}</label>
+            <select value={formData.deal_id} onChange={(e) => setFormData({ ...formData, deal_id: e.target.value })}>
+              <option value="">-- {t('tasks.selectDeal')} --</option>
+              {deals.map((deal) => (
+                <option key={deal.id} value={deal.id}>{deal.title}</option>
+              ))}
             </select>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>

@@ -70,6 +70,7 @@ export const translations = {
       email: '邮箱',
       phone: '电话',
       company: '公司',
+      selectCompany: '选择公司',
       tags: '标签',
       notes: '备注',
       noContacts: '暂无联系人，添加第一个联系人吧！',
@@ -136,6 +137,8 @@ export const translations = {
       deleteFailed: '删除销售机会失败',
       company: '公司',
       contact: '联系人',
+      selectCompany: '选择公司',
+      selectContact: '选择联系人',
       weightedValue: '加权价值',
       stages: {
         lead: '潜在客户',
@@ -168,6 +171,10 @@ export const translations = {
       createFailed: '创建任务失败',
       updateFailed: '更新任务失败',
       deleteFailed: '删除任务失败',
+      contact: '联系人',
+      deal: '商谈',
+      selectContact: '选择联系人',
+      selectDeal: '选择商谈',
       priorities: {
         low: '低',
         medium: '中',
@@ -437,6 +444,8 @@ export const translations = {
       deleteFailed: 'Failed to delete deal',
       company: 'Company',
       contact: 'Contact',
+      selectCompany: 'Select Company',
+      selectContact: 'Select Contact',
       weightedValue: 'Weighted Value',
       stages: {
         lead: 'Lead',
@@ -469,6 +478,10 @@ export const translations = {
       createFailed: 'Failed to create task',
       updateFailed: 'Failed to update task',
       deleteFailed: 'Failed to delete task',
+      contact: 'Contact',
+      deal: 'Deal',
+      selectContact: 'Select Contact',
+      selectDeal: 'Select Deal',
       priorities: {
         low: 'Low',
         medium: 'Medium',
