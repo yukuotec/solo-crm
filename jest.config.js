@@ -22,6 +22,7 @@ module.exports = {
     '^src/renderer/components/Toast$': '<rootDir>/src/renderer/components/Toast.jsx',
     '^src/renderer/components/Modal$': '<rootDir>/src/renderer/components/Modal.jsx',
     '^src/renderer/components/DataTable$': '<rootDir>/src/renderer/components/DataTable.jsx',
+    '^src/renderer/components/ConfirmModal$': '<rootDir>/src/renderer/components/ConfirmModal.jsx',
     '^src/shared/store$': '<rootDir>/src/shared/store.js',
     '^src/renderer/logger$': '<rootDir>/src/renderer/logger.js',
   },
